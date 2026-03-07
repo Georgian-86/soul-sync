@@ -24,7 +24,7 @@
       "dest": "/server-app.js"
     },
     {
-      "src": "/(addUser|login|addMood|addJournalEntry|saveArt|bookAppointment|updateUser)",
+      "src": "/(addUser|login|addMood|addJournalEntry|saveArt|bookAppointment|updateUser|updateProfilePicture)",
       "dest": "/server-app.js"
     },
     {
@@ -43,5 +43,11 @@
       "src": "/$",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "server-app.js": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  }
 }

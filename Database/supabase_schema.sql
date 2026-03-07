@@ -8,6 +8,7 @@ CREATE TABLE users (
   age INTEGER,
   phone_number VARCHAR(20),
   gender VARCHAR(50),
+  profile_picture TEXT,
   role VARCHAR(20) DEFAULT 'patient',
   is_active BOOLEAN DEFAULT true,
   questionnaire_completed BOOLEAN DEFAULT false,

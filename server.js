@@ -12,7 +12,8 @@ const connection = mysql.createConnection({
 });
 
 app.use(cors()); // Allows the HTML file to talk to this server
-app.use(express.json()); // Allows the server to read JSON data
+app.use(express.json({ limit: '10mb' })); // Allows the server to read JSON data with larger payloads
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.post("/login", (req, res) => {
   const { email } = req.body;
@@ -73,10 +74,10 @@ app.post("/updateUser", (req, res) => {
     req.body;
 
   const updateUserQuery =
-    "UPDATE users SET name=?, email=?, age=?, gender=? WHERE user_id=?";
+    "UPDATE users SET name=?, email=?, age=?, gender=?, phone_number=? WHERE user_id=?";
   connection.query(
     updateUserQuery,
-    [name, email, age, gender, userId],
+    [name, email, age, gender, phone, userId],
     (err, result) => {
       if (err) {
         console.error(err);
@@ -86,6 +87,24 @@ app.post("/updateUser", (req, res) => {
         message: "User updated successfully!",
         userId,
       });
+    }
+  );
+});
+
+app.post("/updateProfilePicture", (req, res) => {
+  const { userId, profilePicture } = req.body;
+
+  const updateProfilePicQuery =
+    "UPDATE users SET profile_picture=? WHERE user_id=?";
+  connection.query(
+    updateProfilePicQuery,
+    [profilePicture, userId],
+    (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Database error" });
+      }
+      res.status(200).json({ message: "Profile picture updated successfully!" });
     }
   );
 });

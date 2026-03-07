@@ -1,105 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - SoulSync</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-</head>
+    <style>
+        .profile-container { max-width: 900px; margin: 0 auto; }
+        .profile-header { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 24px; text-align: center; }
+        .profile-pic-wrapper { position: relative; width: 120px; height: 120px; margin: 0 auto 20px; }
+        .profile-pic { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #667eea; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; font-weight: 700; }
+        .profile-pic img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .upload-btn { position: absolute; bottom: 0; right: 0; width: 36px; height: 36px; border-radius: 50%; background: white; border: 2px solid #667eea; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; }
+        .upload-btn:hover { background: #667eea; color: white; }
+        .profile-pic-input { display: none; }
+        .profile-name { font-size: 24px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+        .profile-role { color: #888; font-size: 14px; }
+        .profile-content { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        .profile-content h2 { font-size: 20px; margin-bottom: 24px; color: #1a1a2e; display: flex; justify-content: space-between; align-items: center; }
+        .edit-toggle-btn { padding: 8px 16px; border-radius: 8px; border: 2px solid #667eea; background: white; color: #667eea; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .edit-toggle-btn:hover { background: #667eea; color: white; }
+        .edit-toggle-btn.editing { background: #667eea; color: white; }
+        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px 16px; border: 2px solid #e8e8ee; border-radius: 10px; font-family: inherit; font-size: 14px; background: #fafafa; transition: all 0.2s; }
+        .form-group input:read-only, .form-group select:disabled { background: #f8f8f8; cursor: not-allowed; color: #555; border-color: #f0f0f0; }
+        .form-group input:focus:not(:read-only), .form-group select:focus:not(:disabled) { outline: none; border-color: #667eea; background: white; }
+        .form-actions { display: flex; gap: 12px; }
+        .form-actions button { flex: 1; padding: 14px; border: none; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-save { background: #667eea; color: white; }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102,126,234,0.3); }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-cancel { background: #f0f0f0; color: #666; }
+        .btn-cancel:hover { background: #e0e0e0; }
+        .btn-logout { background: #ef4444; color: white; }
+        .btn-logout:hover { background: #dc2626; }
+        .form-actions.hidden { display: none; }
+        @media (max-width: 768px) {
+            .profile-grid { grid-template-columns: 1fr; }
+        }
 
+        /* Sidebar */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #eaf4ff 0%, #f0e7ff 100%); min-height: 100vh; }
+
+        .sidebar {
+            position: fixed; left: 0; top: 0; width: 240px; height: 100vh;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            color: white; padding: 24px 16px; display: flex; flex-direction: column; z-index: 100;
+            transition: width 0.3s cubic-bezier(.4,0,.2,1);
+        }
+        .sidebar-logo { font-size: 20px; font-weight: 700; margin-bottom: 40px; padding: 0 8px; display: flex; align-items: center; gap: 10px; }
+        .sidebar-logo span { font-size: 24px; }
+        .nav-links { list-style: none; flex: 1; }
+        .nav-links li { margin-bottom: 4px; }
+        .nav-links a {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            color: rgba(255,255,255,0.6); text-decoration: none; border-radius: 10px;
+            font-size: 14px; font-weight: 500; transition: all 0.2s;
+        }
+        .nav-links a:hover { color: white; background: rgba(255,255,255,0.1); }
+        .nav-links a.active { background: rgba(102,126,234,0.3); color: #a8b8ff; }
+        .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; }
+        .user-card { display: flex; align-items: center; gap: 10px; padding: 8px; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-role { font-size: 11px; color: rgba(255,255,255,0.5); }
+        .logout-btn { display: block; width: 100%; padding: 10px; margin-top: 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: transparent; color: rgba(255,255,255,0.6); cursor: pointer; font-family: inherit; font-size: 13px; transition: all 0.2s; }
+        .logout-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+        /* Collapsible Sidebar */
+        .sidebar.collapsed { width: 64px; padding: 24px 8px; }
+        .sidebar.collapsed .sidebar-logo span:last-child,
+        .sidebar.collapsed .nav-links a span:not(.nav-icon),
+        .sidebar.collapsed .user-name,
+        .sidebar.collapsed .user-role,
+        .sidebar.collapsed .logout-btn { display: none; }
+        .sidebar.collapsed .nav-links a { justify-content: center; padding: 12px; }
+        .sidebar.collapsed .user-card { justify-content: center; }
+        .sidebar.collapsed .logout-btn { font-size: 0; padding: 10px; text-align: center; }
+        .sidebar.collapsed .logout-btn::before { content: '🚪'; font-size: 16px; }
+        .sidebar-toggle {
+            position: absolute; top: 28px; right: -14px; width: 28px; height: 28px;
+            border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);
+            background: #1a1a2e; color: white; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; font-size: 12px;
+            transition: all 0.2s; z-index: 101;
+        }
+        .sidebar-toggle:hover { background: #16213e; }
+
+        .main { margin-left: 240px; padding: 24px 32px; transition: margin-left 0.3s cubic-bezier(.4,0,.2,1); min-height: 100vh; }
+        .main.expanded { margin-left: 64px; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; padding: 24px 8px; }
+            .sidebar-logo span:last-child, .nav-links a span:not(.nav-icon), .user-name, .user-role { display: none; }
+            .main { margin-left: 60px; }
+        }
+    </style>
+</head>
 <body>
-    <div class="container">
-        <header>
-            <h1>My Profile</h1>
-            <div>
-                <div id="user-info"></div>
-                <nav>
-                    <a href="patient-dashboard.html">Dashboard</a>
-                    <a href="journal.html">Journal</a>
-                    <a href="art.html">Art Therapy</a>
-                    <a href="music.html">Music</a>
-                    <a href="profile.html" class="active">Profile</a>
-                </nav>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sidebar">◀</button>
+        <div class="sidebar-logo"><span>🧠</span><span>Soul-Sync</span></div>
+        <ul class="nav-links">
+            <li><a href="patient-dashboard.html"><span class="nav-icon">📊</span><span>Dashboard</span></a></li>
+            <li><a href="journal.html"><span class="nav-icon">📓</span><span>Journal</span></a></li>
+            <li><a href="art.html"><span class="nav-icon">🎨</span><span>Art Therapy</span></a></li>
+            <li><a href="music.html"><span class="nav-icon">🎵</span><span>Music</span></a></li>
+            <li><a href="game.html"><span class="nav-icon">🎮</span><span>Games</span></a></li>
+            <li><a href="questionnaire.html"><span class="nav-icon">📋</span><span>Assessment</span></a></li>
+            <li><a href="profile.html" class="active"><span class="nav-icon">👤</span><span>Profile</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar" id="avatarInitial">?</div>
+                <div><div class="user-name" id="sidebarName">Loading...</div><div class="user-role">Patient</div></div>
             </div>
-        </header>
-        <main>
-            <h2 style="text-align: center;">Update Your Details</h2>
-            <form id="profileForm" class="profile-form">
-                <div class="form-group"><label for="name">Name</label><input type="text" id="name" required></div>
-                <div class="form-group"><label for="email">Email ID</label><input type="email" id="email" required>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main" id="mainContent">
+        <div class="profile-container">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-pic-wrapper">
+                    <div class="profile-pic" id="profilePicDisplay">
+                        <span id="profileInitial">?</span>
+                        <img id="profilePicImage" style="display: none;" alt="Profile">
+                    </div>
+                    <label class="upload-btn" for="profilePicInput" title="Upload profile picture">📷</label>
+                    <input type="file" id="profilePicInput" class="profile-pic-input" accept="image/*">
                 </div>
-                <div class="form-group"><label for="phone">Phone No</label><input type="tel" id="phone"></div>
-                <div class="form-group"><label for="age">Age</label><input type="number" id="age"></div>
-                <div class="form-group"><label for="gender">Gender</label><select id="gender">
-                        <option value="female">Female</option>
-                        <option value="male">Male</option>
-                        <option value="non-binary">Non-binary</option>
-                        <option value="prefer-not-to-say">Prefer not to say</option>
-                    </select></div>
-                <button type="submit" class="btn">Update Profile</button>
-                <button type="button" class="btn" onclick="logout()"
-                    style="background-image: none; background-color: var(--secondary-text); margin-top: 10px;">Log
-                    Out</button>
-            </form>
-        </main>
+                <div class="profile-name" id="profileNameDisplay">Loading...</div>
+                <div class="profile-role">Patient</div>
+            </div>
+
+            <!-- Profile Details -->
+            <div class="profile-content">
+                <h2>
+                    Profile Information
+                    <button type="button" class="edit-toggle-btn" id="editToggleBtn" onclick="toggleEditMode()">Edit Profile</button>
+                </h2>
+                <form id="profileForm">
+                    <div class="profile-grid">
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" readonly required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" readonly required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" disabled>
+                                <option value="female">Female</option>
+                                <option value="male">Male</option>
+                                <option value="non-binary">Non-binary</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions hidden" id="formActions">
+                        <button type="submit" class="btn-save">Save Changes</button>
+                        <button type="button" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+                    </div>
+                    <div class="form-actions" id="logoutAction">
+                        <button type="button" class="btn-logout" onclick="logout()">Logout</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
-        const API = 'http://localhost:3000';
-        document.addEventListener('DOMContentLoaded', async () => {
-            const currentUserId = localStorage.getItem('currentUserId');
-            if (!currentUserId) { window.location.href = 'login-page.html'; return; }
+        const API = '';
+        let isEditMode = false;
+        let currentUser = null;
+        let profilePicture = null;
 
+        // Auth & Sidebar
+        const userId = localStorage.getItem('currentUserId');
+        const userName = localStorage.getItem('userName');
+        if (!userId) { window.location.href = 'login-page.html'; }
+        if (userName) {
+            document.getElementById('sidebarName').textContent = userName;
+            document.getElementById('avatarInitial').textContent = userName.charAt(0).toUpperCase();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            toggleBtn.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+            localStorage.setItem('sidebarCollapsedProfile', sidebar.classList.contains('collapsed'));
+        }
+        if (localStorage.getItem('sidebarCollapsedProfile') === 'true') { toggleSidebar(); }
+
+        function logout() { localStorage.clear(); window.location.href = 'login-page.html'; }
+
+        // Load Profile Data
+        document.addEventListener('DOMContentLoaded', async () => {
             try {
-                const response = await fetch(`${API}/getUserDetails/${currentUserId}`);
+                const response = await fetch(`${API}/getUserDetails/${userId}`);
                 const user = await response.json();
                 if (user && user.name) {
-                    document.getElementById('user-info').innerHTML = `Logged in as: <a href="profile.html">${user.name}</a>`;
-                    document.getElementById('name').value = user.name || '';
-                    document.getElementById('email').value = user.email || '';
-                    document.getElementById('phone').value = user.phone_number || '';
-                    document.getElementById('age').value = user.age || '';
-                    document.getElementById('gender').value = user.gender || 'prefer-not-to-say';
+                    currentUser = user;
+                    displayProfile(user);
                 } else {
                     window.location.href = 'login-page.html';
                 }
             } catch (error) {
-                console.error(error);
+                console.error('Error loading profile:', error);
+                alert('Failed to load profile data');
             }
         });
 
-        // Button state UX
-        const submitBtn = document.querySelector('.btn[type="submit"]');
-        function updateSubmitButton() {
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            if (name && email) {
-                submitBtn.style.backgroundImage = 'none';
-                submitBtn.style.backgroundColor = '#1a1a2e';
-                submitBtn.style.color = 'white';
-            } else {
-                submitBtn.style.backgroundImage = '';
-                submitBtn.style.backgroundColor = '';
-                submitBtn.style.color = '';
+        function displayProfile(user) {
+            document.getElementById('profileNameDisplay').textContent = user.name || 'User';
+            document.getElementById('profileInitial').textContent = (user.name || 'U').charAt(0).toUpperCase();
+            document.getElementById('name').value = user.name || '';
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('phone').value = user.phone_number || '';
+            document.getElementById('age').value = user.age || '';
+            document.getElementById('gender').value = user.gender || 'prefer-not-to-say';
+            
+            // Load profile picture if exists
+            if (user.profile_picture) {
+                document.getElementById('profilePicImage').src = user.profile_picture;
+                document.getElementById('profilePicImage').style.display = 'block';
+                document.getElementById('profileInitial').style.display = 'none';
             }
         }
-        document.getElementById('name').addEventListener('input', updateSubmitButton);
-        document.getElementById('email').addEventListener('input', updateSubmitButton);
 
+        // Edit Mode Toggle
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const editBtn = document.getElementById('editToggleBtn');
+            const fields = ['name', 'email', 'phone', 'age'];
+            const gender = document.getElementById('gender');
+            
+            if (isEditMode) {
+                editBtn.textContent = 'Cancel Edit';
+                editBtn.classList.add('editing');
+                fields.forEach(field => document.getElementById(field).removeAttribute('readonly'));
+                gender.removeAttribute('disabled');
+                document.getElementById('formActions').classList.remove('hidden');
+                document.getElementById('logoutAction').classList.add('hidden');
+            } else {
+                cancelEdit();
+            }
+        }
+
+        function cancelEdit() {
+            isEditMode = false;
+            const editBtn = document.getElementById('editToggleBtn');
+            editBtn.textContent = 'Edit Profile';
+            editBtn.classList.remove('editing');
+            const fields = ['name', 'email', 'phone', 'age'];
+            fields.forEach(field => document.getElementById(field).setAttribute('readonly', true));
+            document.getElementById('gender').setAttribute('disabled', true);
+            document.getElementById('formActions').classList.add('hidden');
+            document.getElementById('logoutAction').classList.remove('hidden');
+            if (currentUser) displayProfile(currentUser);
+        }
+
+        // Profile Picture Upload
+        document.getElementById('profilePicInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('Image size should be less than 10MB');
+                    return;
+                }
+                
+                // Compress and resize image
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Create canvas for compression
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Calculate new dimensions (max 400x400)
+                        let width = img.width;
+                        let height = img.height;
+                        const maxSize = 400;
+                        
+                        if (width > height) {
+                            if (width > maxSize) {
+                                height = (height * maxSize) / width;
+                                width = maxSize;
+                            }
+                        } else {
+                            if (height > maxSize) {
+                                width = (width * maxSize) / height;
+                                height = maxSize;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Convert to compressed base64 (quality 0.7 for smaller file size)
+                        profilePicture = canvas.toDataURL('image/jpeg', 0.7);
+                        document.getElementById('profilePicImage').src = profilePicture;
+                        document.getElementById('profilePicImage').style.display = 'block';
+                        document.getElementById('profileInitial').style.display = 'none';
+                        uploadProfilePicture(profilePicture);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function uploadProfilePicture(base64Image) {
+            try {
+                const response = await fetch(`${API}/updateProfilePicture`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, profilePicture: base64Image })
+                });
+                if (response.ok) {
+                    console.log('Profile picture updated successfully');
+                } else {
+                    alert('Failed to update profile picture');
+                }
+            } catch (error) {
+                console.error('Error uploading profile picture:', error);
+            }
+        }
+
+        // Save Profile
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const userData = {
-                userId: localStorage.getItem('currentUserId'),
-                name: document.getElementById("name").value,
-                email: document.getElementById("email").value,
-                phone: document.getElementById("phone").value,
-                age: document.getElementById("age").value,
-                gender: document.getElementById("gender").value,
+                userId,
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                age: document.getElementById('age').value,
+                gender: document.getElementById('gender').value,
             };
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
 
             try {
                 const response = await fetch(`${API}/updateUser`, {
@@ -110,33 +371,18 @@
 
                 if (response.ok) {
                     localStorage.setItem('userName', userData.name);
-                    submitBtn.textContent = '✓ Profile Updated!';
-                    submitBtn.style.backgroundColor = '#059669';
-                    document.getElementById('user-info').innerHTML = `Logged in as: <a href="profile.html">${userData.name}</a>`;
-                    setTimeout(() => { submitBtn.textContent = 'Update Profile'; submitBtn.disabled = false; updateSubmitButton(); }, 2000);
+                    currentUser = { ...currentUser, ...userData };
+                    displayProfile(currentUser);
+                    cancelEdit();
+                    alert('✓ Profile updated successfully!');
                 } else {
-                    alert('Failed to update profile.');
-                    submitBtn.textContent = 'Update Profile'; submitBtn.disabled = false;
+                    alert('Failed to update profile');
                 }
             } catch (error) {
-                console.error(error);
-                alert('Error: Server not reached.');
-                submitBtn.textContent = 'Update Profile'; submitBtn.disabled = false;
+                console.error('Error:', error);
+                alert('Error updating profile');
             }
         });
-
-        function logout() {
-            // Clear all data related to the user session
-            localStorage.removeItem('currentUserId');
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userRole');
-            localStorage.removeItem('userName');
-            localStorage.removeItem('soulSyncUser');
-            localStorage.removeItem('soulSyncJournal');
-            localStorage.removeItem('soulSyncMoods');
-            window.location.href = 'login-page.html';
-        }
     </script>
 </body>
-
 </html>
