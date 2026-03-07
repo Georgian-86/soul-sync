@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music - SoulSync</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Music Therapy</h1>
+            <div>
+                <div id="user-info"></div>
+                <nav>
+                    <a href="patient-dashboard.html">Dashboard</a>
+                    <a href="journal.html">Journal</a>
+                    <a href="art.html">Art Therapy</a>
+                    <a href="music.html" class="active">Music</a>
+                    <a href="profile.html">Profile</a>
+                </nav>
+            </div>
+        </header>
+        <main>
+            <h2>Relaxing Sounds</h2>
+            <div class="music-grid">
+                <div class="music-card">
+                    <h3>Peaceful Piano 🎹</h3>
+                    <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
+                        src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/280885442&color=%235c5c8e&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false">
+                    </iframe>
+                </div>
+                
+                <div class="music-card">
+                    <h3>Calm River 🌊</h3>
+                    <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
+                        src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/218845815&color=%235c5c8e&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false">
+                    </iframe>
+                </div>
+
+                <div class="music-card">
+                    <h3>Nature Sounds 🌳</h3>
+                    <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
+                        src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/242706685&color=%235c5c8e&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false">
+                    </iframe>
+                </div>
+
+                <div class="music-card">
+                    <h3>Relaxing Sleep Music 🧘</h3>
+                    <iframe 
+                        width="100%" 
+                        height="180" 
+                        src="https://www.youtube.com/embed/1ZYbU82GVz4?rel=0" 
+                        title="Relaxing Sleep Music" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+
+                <div class="music-card">
+                    <h3>Deep Focus Music 🎧</h3>
+                    <iframe 
+                        width="100%" 
+                        height="180" 
+                        src="https://www.youtube.com/embed/jfKfPfyJRdk?rel=0" 
+                        title="Deep Focus Music" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+
+                <div class="music-card">
+                    <h3>Meditation Music 🕊️</h3>
+                    <iframe 
+                        width="100%" 
+                        height="180" 
+                        src="https://www.youtube.com/embed/FjHGZj2IjBk?rel=0" 
+                        title="Meditation Music" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </main>
+    </div>
+     <script>
+        // Auth Check
+        const userId = localStorage.getItem('currentUserId');
+        const userName = localStorage.getItem('userName');
+        if (!userId) {
+            window.location.href = 'login-page.html';
+        } else {
+            document.getElementById('user-info').innerHTML = `Logged in as: <a href="profile.html">${userName || 'User'}</a>`;
+        }
+    </script>
+</body>
+</html>

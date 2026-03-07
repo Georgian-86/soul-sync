@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulSync Onboarding Questionnaire</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Your original CSS remains unchanged for styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #F3EFFF 0%, #EAE4FF 50%, #E1D9FF 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .floating-decoration {
+            position: fixed;
+            font-size: 2.5rem;
+            color: white;
+            opacity: 0.6;
+            animation: float 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+        }
+
+        .deco-1 {
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .deco-2 {
+            bottom: 15%;
+            right: 8%;
+            animation-delay: 2s;
+            transform: scaleX(-1);
+        }
+
+        .deco-3 {
+            top: 50%;
+            left: -3%;
+            animation-delay: 4s;
+        }
+
+        .deco-4 {
+            bottom: 5%;
+            left: 15%;
+            animation-delay: 6s;
+        }
+
+        .popup-overlay {
+            position: relative;
+            z-index: 1;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 650px;
+            padding: 30px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        h2 {
+            color: #5c5c8e;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0f5;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #a6c1ee;
+            /* Accent Blue */
+            transition: width 0.3s ease-in-out;
+            border-radius: 4px;
+        }
+
+        .question-container {
+            display: none;
+            text-align: left;
+            padding: 0 20px;
+        }
+
+        .question-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-container h3 {
+            color: #7f8daa;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        /* Custom Radio Button Styling */
+        .custom-radio {
+            display: block;
+            position: relative;
+            cursor: pointer;
+            font-size: 1rem;
+            user-select: none;
+            background-color: #f7f7ff;
+            border: 2px solid #e1d9ff;
+            border-radius: 10px;
+            padding: 15px 20px 15px 45px;
+            transition: all 0.2s ease;
+            color: #5c5c8e;
+        }
+
+        .custom-radio:hover {
+            background-color: #eaeaee;
+            border-color: #a6c1ee;
+        }
+
+        /* Hide the browser's default radio button */
+        .custom-radio input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Create a custom radio circle */
+        .checkmark {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            height: 20px;
+            width: 20px;
+            background-color: #eee;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+        }
+
+        /* On mouse-over */
+        .custom-radio:hover input~.checkmark {
+            background-color: #ccc;
+        }
+
+        /* When the radio button is checked */
+        .custom-radio input:checked~.checkmark {
+            background-color: #a6c1ee;
+            border-color: #5c5c8e;
+        }
+
+        /* Create the indicator (inner circle) */
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        /* Show the indicator when checked */
+        .custom-radio input:checked~.checkmark:after {
+            display: block;
+        }
+
+        /* Style the indicator (inner circle) */
+        .custom-radio .checkmark:after {
+            top: 4px;
+            left: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        /* State for selected radio button */
+        .custom-radio input:checked~.checkmark {
+            background-color: #a6c1ee;
+            /* Blue */
+        }
+
+        .custom-radio input:checked {
+            border-color: #5c5c8e;
+        }
+
+        .custom-radio input:checked~.checkmark {
+            border-color: #5c5c8e;
+        }
+
+        .custom-radio input:checked~.checkmark:after {
+            background: #5c5c8e;
+        }
+
+        /* Button Styling */
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            flex-grow: 1;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #a6c1ee, #fbc2eb);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(166, 193, 238, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(166, 193, 238, 0.6);
+        }
+
+        .btn-secondary {
+            flex-grow: 1;
+            padding: 12px 25px;
+            border: 2px solid #a6c1ee;
+            border-radius: 8px;
+            background: white;
+            color: #a6c1ee;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f3f3ff;
+        }
+
+        .completion-message {
+            display: none;
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .completion-message h2 {
+            color: #a6c1ee;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .completion-message p {
+            color: #7f8daa;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="floating-decoration deco-1">✨</div>
+    <div class="floating-decoration deco-2">🧘‍♀️</div>
+    <div class="floating-decoration deco-3">🍃</div>
+    <div class="floating-decoration deco-4">🌸</div>
+
+    <div class="popup-overlay">
+        <h2>Your Onboarding Journey</h2>
+
+        <div class="progress-bar-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div class="question-container active" data-question-id="1">
+            <h3>1. When you feel overwhelmed, what is your most common reaction?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Withdrawal and Isolation
+                    <input type="radio" name="q1" value="isolation">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Seek support or talk to someone
+                    <input type="radio" name="q1" value="support">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Distraction (e.g., TV, games, social media)
+                    <input type="radio" name="q1" value="distraction">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Physical activity or a creative outlet
+                    <input type="radio" name="q1" value="creative">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="nextQuestion(1)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="2">
+            <h3>2. How often do you take time to identify and process your emotions?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Rarely or never; I tend to bottle them up.
+                    <input type="radio" name="q2" value="rarely">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Sometimes, when a strong emotion forces me to.
+                    <input type="radio" name="q2" value="sometimes">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Often, I try to check in with myself daily.
+                    <input type="radio" name="q2" value="often">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Almost constantly; I am very in tune with my feelings.
+                    <input type="radio" name="q2" value="constantly">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(2)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(2)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="3">
+            <h3>3. How do you respond to yourself after making a mistake or facing a failure?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Self-critical and harsh; I dwell on the mistake.
+                    <input type="radio" name="q3" value="critical">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    I get frustrated, but quickly try to move on.
+                    <input type="radio" name="q3" value="frustrated">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    With understanding; I see it as a learning opportunity.
+                    <input type="radio" name="q3" value="learning">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    I treat myself with the same kindness I would a close friend.
+                    <input type="radio" name="q3" value="kindness">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(3)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(3)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="4">
+            <h3>4. How important is it for you to reflect on your day before going to sleep?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Not important; I prefer to clear my mind completely.
+                    <input type="radio" name="q4" value="not_important">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Somewhat important; I sometimes think about my day.
+                    <input type="radio" name="q4" value="somewhat">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Important; I often write or mentally review key events.
+                    <input type="radio" name="q4" value="important">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Very important; It's a non-negotiable part of my routine.
+                    <input type="radio" name="q4" value="very_important">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(4)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(4)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="5">
+            <h3>5. How often do you engage in creative activities (e.g., drawing, music, writing, crafting) to manage
+                stress?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Never or almost never.
+                    <input type="radio" name="q5" value="never">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Rarely; I don't feel like I'm a creative person.
+                    <input type="radio" name="q5" value="rarely">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Sometimes; it's a helpful but occasional outlet.
+                    <input type="radio" name="q5" value="sometimes">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Often; it's a primary way I express myself and relax.
+                    <input type="radio" name="q5" value="often">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(5)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(5)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="6">
+            <h3>6. What is your primary goal for improving your mental wellness?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    To better understand the root causes of my anxiety/mood.
+                    <input type="radio" name="q6" value="understanding">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    To be more consistent with mindfulness or self-care habits.
+                    <input type="radio" name="q6" value="consistency">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    To reduce overall stress levels and improve sleep.
+                    <input type="radio" name="q6" value="reduce_stress">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    To feel more connected to others and less isolated.
+                    <input type="radio" name="q6" value="connection">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(6)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(6)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="7">
+            <h3>7. Which type of relaxing content or activity appeals to you most?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Guided meditations with spoken instructions.
+                    <input type="radio" name="q7" value="guided">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Instrumental music or ambient nature sounds.
+                    <input type="radio" name="q7" value="music">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Creative/Art Therapy (drawing, coloring).
+                    <input type="radio" name="q7" value="art">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Journaling or free-form writing.
+                    <input type="radio" name="q7" value="journaling">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(7)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(7)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="8">
+            <h3>8. What is the biggest barrier preventing you from practicing self-care consistently?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Lack of time or a feeling of being "too busy."
+                    <input type="radio" name="q8" value="time">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Lack of motivation or not knowing where to start.
+                    <input type="radio" name="q8" value="motivation">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Difficulty in maintaining a routine or habit.
+                    <input type="radio" name="q8" value="routine">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Feeling that self-care is a luxury, not a necessity.
+                    <input type="radio" name="q8" value="luxury">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(8)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(8)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="9">
+            <h3>9. How would you rate your current level of social support?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Very low; I feel isolated and have few close friends.
+                    <input type="radio" name="q9" value="very_low">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Moderate; I have a few people but hesitate to talk about deep issues.
+                    <input type="radio" name="q9" value="moderate">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Good; I have a supportive circle I can rely on.
+                    <input type="radio" name="q9" value="good">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Excellent; I have strong, deep connections and feel fully supported.
+                    <input type="radio" name="q9" value="excellent">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(9)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(9)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="10">
+            <h3>10. On a scale of 1 to 5, how optimistic are you about improving your mental health in the next 6
+                months?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    1 - Not optimistic at all.
+                    <input type="radio" name="q10" value="1">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    2 - Slightly optimistic.
+                    <input type="radio" name="q10" value="2">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    3 - Moderately optimistic.
+                    <input type="radio" name="q10" value="3">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    4 - Very optimistic.
+                    <input type="radio" name="q10" value="4">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    5 - Extremely optimistic and ready to start.
+                    <input type="radio" name="q10" value="5">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(10)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(10)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="11">
+            <h3>11. How comfortable are you saying "no" to new commitments when your schedule is already full?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Very uncomfortable; I almost always agree to avoid conflict or disappointing others.
+                    <input type="radio" name="q11" value="very_uncomfortable">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Somewhat uncomfortable; I say no only when I am absolutely overwhelmed.
+                    <input type="radio" name="q11" value="somewhat_uncomfortable">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Comfortable; I can set boundaries clearly most of the time.
+                    <input type="radio" name="q11" value="comfortable">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Very comfortable; My self-care is a priority and I say no without guilt.
+                    <input type="radio" name="q11" value="very_comfortable">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(11)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(11)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="12">
+            <h3>12. How often do you wake up feeling truly rested and energized?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Rarely or never.
+                    <input type="radio" name="q12" value="rarely_never">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Occasionally; maybe once or twice a week.
+                    <input type="radio" name="q12" value="occasionally">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Most mornings (3-5 times a week).
+                    <input type="radio" name="q12" value="most_mornings">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Almost every day.
+                    <input type="radio" name="q12" value="almost_every_day">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(12)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(12)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="13">
+            <h3>13. How often do you intentionally step away from all screens (phone, computer, TV) for a few hours?
+            </h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Never; I need to be available/connected.
+                    <input type="radio" name="q13" value="never">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    A few times a month.
+                    <input type="radio" name="q13" value="few_times_month">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Once or twice a week.
+                    <input type="radio" name="q13" value="once_or_twice_week">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Every day (e.g., during meals or before bed).
+                    <input type="radio" name="q13" value="every_day">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(13)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(13)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="14">
+            <h3>14. How often do you eat your meals without distraction (e.g., no phone, no TV, not working)?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Almost never; I usually multitask while eating.
+                    <input type="radio" name="q14" value="almost_never">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Sometimes, maybe one meal a day.
+                    <input type="radio" name="q14" value="sometimes">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Most of the time (more than half of my meals).
+                    <input type="radio" name="q14" value="most_of_the_time">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Almost all meals are eaten mindfully and without distraction.
+                    <input type="radio" name="q14" value="almost_all">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(14)">Back</button>
+                <button class="btn-primary" onclick="nextQuestion(14)">Next</button>
+            </div>
+        </div>
+
+        <div class="question-container" data-question-id="15">
+            <h3>15. How important is daily physical activity (e.g., walking, exercise, yoga) to your overall mood?</h3>
+            <div class="options-grid">
+                <label class="custom-radio">
+                    Not important; I rarely notice a mood difference from exercise.
+                    <input type="radio" name="q15" value="not_important">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Somewhat important; it helps occasionally.
+                    <input type="radio" name="q15" value="somewhat">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Important; I feel a noticeable dip in mood if I skip it for a few days.
+                    <input type="radio" name="q15" value="important">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="custom-radio">
+                    Very important; It is essential for managing my mental and emotional state.
+                    <input type="radio" name="q15" value="very_important">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="prevQuestion(15)">Back</button>
+                <button class="btn-primary" onclick="finishQuiz()">Finish</button>
+            </div>
+        </div>
+
+
+        <div id="completionMessage" class="completion-message">
+            <div id="loadingState">
+                <h2>Analyzing Your Responses... 🧠</h2>
+                <p>Our AI is creating your personalized mental health assessment. Please wait...</p>
+                <div style="margin: 20px auto; width: 50px; height: 50px; border: 4px solid #e1d9ff; border-top: 4px solid #a6c1ee; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+            <div id="resultsState" style="display:none; text-align:left;">
+                <h2 style="text-align:center;">Your Assessment Results 🌸</h2>
+                <div id="scoreCard" style="text-align:center; margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-radius: 16px;">
+                    <div style="font-size: 48px; font-weight: 700; color: #5c5c8e;" id="scoreValue">—</div>
+                    <div style="font-size: 14px; color: #7f8daa; margin-top: 4px;" id="scoreCategory">Calculating...</div>
+                </div>
+                <div id="summaryText" style="color: #5c5c8e; font-size: 14px; line-height: 1.6; margin-bottom: 16px;"></div>
+                <div id="strengthsSection" style="margin-bottom: 16px;"></div>
+                <div id="improvementsSection" style="margin-bottom: 16px;"></div>
+                <div id="recommendationsSection" style="margin-bottom: 16px;"></div>
+                <div id="professionalHelp" style="display:none; padding: 14px; background: #fef3c7; border-radius: 10px; margin-bottom: 16px; font-size: 13px; color: #92400e;"></div>
+                <button class="btn-primary" onclick="window.location.href='patient-dashboard.html'" style="width: 100%; margin-top: 10px;">Go to Dashboard →</button>
+            </div>
+        </div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    </div>
+
+    <script>
+        const API = 'http://localhost:3000';
+        const totalQuestions = 15;
+        let currentQuestion = 1;
+        const progressBar = document.getElementById('progressBar');
+        const completionMessage = document.getElementById('completionMessage');
+
+        function updateProgressBar() {
+            const progress = ((currentQuestion - 1) / totalQuestions) * 100;
+            progressBar.style.width = Math.min(progress, 100) + '%';
+        }
+
+        // Enable/disable Next button based on selection
+        function updateButtonStates() {
+            document.querySelectorAll('.question-container').forEach(container => {
+                const selected = container.querySelector('input[type="radio"]:checked');
+                const nextBtn = container.querySelector('.btn-primary');
+                if (nextBtn) {
+                    if (selected) {
+                        nextBtn.style.background = 'linear-gradient(45deg, #1a1a2e, #302b63)';
+                        nextBtn.style.boxShadow = '0 4px 15px rgba(26,26,46,0.4)';
+                    } else {
+                        nextBtn.style.background = 'linear-gradient(45deg, #a6c1ee, #fbc2eb)';
+                        nextBtn.style.boxShadow = '0 4px 15px rgba(166, 193, 238, 0.4)';
+                    }
+                }
+            });
+        }
+
+        // Listen for radio changes
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', updateButtonStates);
+        });
+
+        function showQuestion(number) {
+            document.querySelectorAll('.question-container').forEach(c => c.classList.remove('active'));
+            const nextC = document.querySelector(`[data-question-id="${number}"]`);
+            if (nextC) {
+                nextC.classList.add('active');
+            } else if (number > totalQuestions) {
+                document.querySelectorAll('.question-container').forEach(c => c.classList.remove('active'));
+                document.querySelector('.popup-overlay > h2').classList.add('hidden');
+                document.querySelector('.progress-bar-container').classList.add('hidden');
+                completionMessage.style.display = 'block';
+                submitQuiz();
+            }
+            currentQuestion = number;
+            updateProgressBar();
+            updateButtonStates();
+        }
+
+        function nextQuestion(currentQ) {
+            const container = document.querySelector(`[data-question-id="${currentQ}"]`);
+            const selected = container.querySelector('input[type="radio"]:checked');
+            if (!selected) { alert("Please select an option to continue."); return; }
+            showQuestion(currentQ + 1);
+        }
+
+        function prevQuestion(currentQ) {
+            if (currentQ > 1) showQuestion(currentQ - 1);
+        }
+
+        function finishQuiz() {
+            const container = document.querySelector('[data-question-id="15"]');
+            const selected = container.querySelector('input[type="radio"]:checked');
+            if (!selected) { alert('Please select an option to continue.'); return; }
+            showQuestion(16);
+        }
+
+        async function submitQuiz() {
+            const userId = localStorage.getItem('currentUserId');
+            const answers = {};
+            document.querySelectorAll('.question-container').forEach(container => {
+                const qId = container.dataset.questionId;
+                const selected = container.querySelector('input[type="radio"]:checked');
+                if (selected) answers[`q${qId}`] = selected.value;
+            });
+
+            try {
+                const res = await fetch(`${API}/api/questionnaire/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, answers })
+                });
+                const data = await res.json();
+                if (data.analysis) {
+                    showResults(data.analysis);
+                } else {
+                    showFallbackResults();
+                }
+            } catch (err) {
+                console.error('Submit error:', err);
+                showFallbackResults();
+            }
+        }
+
+        function showResults(analysis) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('resultsState').style.display = 'block';
+
+            document.getElementById('scoreValue').textContent = (analysis.overallScore || 50) + '/100';
+            document.getElementById('scoreCategory').textContent = analysis.category || 'Assessment Complete';
+            document.getElementById('summaryText').textContent = analysis.summary || '';
+
+            if (analysis.strengths && analysis.strengths.length > 0) {
+                document.getElementById('strengthsSection').innerHTML = '<h3 style="color:#059669;font-size:14px;margin-bottom:8px;">💪 Your Strengths</h3>' +
+                    analysis.strengths.map(s => `<div style="padding:8px 12px;background:#d1fae5;border-radius:8px;margin-bottom:6px;font-size:13px;color:#065f46;">✓ ${esc(s)}</div>`).join('');
+            }
+
+            if (analysis.areasToImprove && analysis.areasToImprove.length > 0) {
+                document.getElementById('improvementsSection').innerHTML = '<h3 style="color:#d97706;font-size:14px;margin-bottom:8px;">🎯 Areas to Focus On</h3>' +
+                    analysis.areasToImprove.map(a => `<div style="padding:8px 12px;background:#fef3c7;border-radius:8px;margin-bottom:6px;font-size:13px;color:#92400e;">→ ${esc(a)}</div>`).join('');
+            }
+
+            if (analysis.recommendations && analysis.recommendations.length > 0) {
+                document.getElementById('recommendationsSection').innerHTML = '<h3 style="color:#5c5c8e;font-size:14px;margin-bottom:8px;">📋 Recommendations</h3>' +
+                    analysis.recommendations.map((r, i) => `<div style="padding:8px 12px;background:#ede9fe;border-radius:8px;margin-bottom:6px;font-size:13px;color:#5b21b6;">${i+1}. ${esc(r)}</div>`).join('');
+            }
+
+            if (analysis.seekProfessionalHelp) {
+                const hp = document.getElementById('professionalHelp');
+                hp.style.display = 'block';
+                hp.innerHTML = '⚠️ <strong>Professional Support Recommended:</strong> ' + esc(analysis.professionalHelpReason || 'Consider speaking with a mental health professional for additional support.');
+            }
+        }
+
+        function showFallbackResults() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('resultsState').style.display = 'block';
+            document.getElementById('scoreValue').textContent = '✓';
+            document.getElementById('scoreCategory').textContent = 'Assessment Submitted';
+            document.getElementById('summaryText').textContent = 'Your questionnaire has been submitted successfully. Visit your dashboard to track your mental health journey.';
+        }
+
+        function esc(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+
+        // Init
+        (function init() {
+            const user = localStorage.getItem('currentUserId');
+            if (!user) { alert("Please log in first."); window.location.href = 'login-page.html'; return; }
+            updateProgressBar();
+            showQuestion(1);
+            updateButtonStates();
+        })();
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const activeContainer = document.querySelector('.question-container.active');
+                if (activeContainer) {
+                    const nextBtn = activeContainer.querySelector('.btn-primary');
+                    if (nextBtn) { event.preventDefault(); nextBtn.click(); }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

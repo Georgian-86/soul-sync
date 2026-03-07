@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game - Bubble Pop</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="game-styles.css"> 
+    <style>
+        /* Placeholder for game-styles.css if it's not present */
+        .game-main {
+            text-align: center;
+        }
+
+        .game-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        #bubbleCanvas {
+            border: 2px solid #a6c1ee;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, #eaf4ff, #fff);
+            cursor: pointer;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 700px;
+            max-width: 100%;
+            margin-top: 20px;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            color: #5c5c8e;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Stress Relief Game</h1>
+            <div>
+                <div id="user-info"></div>
+                <nav>
+                    <a href="patient-dashboard.html">Dashboard</a>
+                    <a href="journal.html">Journal</a>
+                    <a href="art.html">Art Therapy</a>
+                    <a href="music.html">Music</a>
+                    <a href="profile.html">Profile</a>
+                </nav>
+            </div>
+        </header>
+        <main class="game-main">
+            <h2>Bubble Pop: Tap to Relax</h2>
+            <p class="game-description">Pop the bubbles to relieve stress. They regenerate slowly, offering a moment of quiet focus.</p>
+
+            <div class="game-card">
+                <canvas id="bubbleCanvas" width="700" height="400"></canvas>
+                <div class="game-controls">
+                    <button id="resetButton" class="btn back-btn">Reset Bubbles</button>
+                    <div class="score">Bubbles Popped: <span id="popCount">0</span></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <audio id="popSound" src="https://cdn.pixabay.com/audio/2021/08/04/audio_3d19f5df1a.mp3" preload="auto"></audio>
+
+    <script>
+        // Auth Check
+        const userId = localStorage.getItem('currentUserId');
+        const userName = localStorage.getItem('userName');
+        if (!userId) {
+            window.location.href = 'login-page.html';
+        } else {
+            document.getElementById('user-info').innerHTML = `Logged in as: <a href="profile.html">${userName || 'User'}</a>`;
+        }
+
+        // --- BUBBLE GAME LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('bubbleCanvas');
+            const popCountEl = document.getElementById('popCount');
+            const resetButton = document.getElementById('resetButton');
+            const ctx = canvas.getContext('2d');
+            
+            // --- NEW LINE: Get the Audio Element ---
+            const POP_SOUND = document.getElementById('popSound'); 
+
+            const MAX_BUBBLES = 15;
+            let bubbles = [];
+            let popCount = 0;
+
+            class Bubble {
+                constructor(x, y, radius) {
+                    this.x = x;
+                    this.y = y;
+                    this.radius = radius;
+                    this.velocity = { x: (Math.random() - 0.5) * 0.5, y: (Math.random() * 0.5) + 0.1 }; // Slight upward bias
+                    this.color = `rgba(166, 193, 238, ${0.4 + Math.random() * 0.3})`;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                    
+                    // Bubble body
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+
+                    // Bubble highlight
+                    ctx.beginPath();
+                    ctx.arc(this.x - this.radius / 3, this.y - this.radius / 3, this.radius / 5, 0, Math.PI * 2, false);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.fill();
+
+                    // Bubble outline
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = `rgba(166, 193, 238, 0.8)`;
+                    ctx.stroke();
+                }
+
+                update() {
+                    // Reverse movement if hitting horizontal walls
+                    if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+                        this.velocity.x *= -1;
+                    }
+
+                    // Reverse movement if hitting top wall, but bubbles disappear at the bottom
+                    if (this.y - this.radius < 0) {
+                         this.velocity.y *= -1;
+                    }
+                    
+                    // Apply velocity
+                    this.x += this.velocity.x;
+                    this.y -= this.velocity.y; // Y-axis moves upward (bubbles float)
+
+                    this.draw();
+                }
+            }
+
+            function createRandomBubble() {
+                const radius = Math.random() * 20 + 15; // Radius between 15 and 35
+                const x = Math.random() * (canvas.width - 2 * radius) + radius;
+                const y = canvas.height + radius; // Start off-screen at the bottom
+                bubbles.push(new Bubble(x, y, radius));
+            }
+
+            function initBubbles() {
+                bubbles = [];
+                popCount = 0;
+                popCountEl.textContent = popCount;
+                for (let i = 0; i < MAX_BUBBLES; i++) {
+                    createRandomBubble();
+                }
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                // Clear the canvas for the next frame, giving a faint trail
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                bubbles.forEach((bubble, index) => {
+                    // Check if bubble has floated completely off the top screen
+                    if (bubble.y + bubble.radius < 0) {
+                        bubbles.splice(index, 1);
+                        createRandomBubble(); // Replace the lost bubble immediately
+                        return;
+                    }
+                    bubble.update();
+                });
+
+                // Regeneration: Add a new bubble occasionally if below MAX_BUBBLES
+                if (bubbles.length < MAX_BUBBLES && Math.random() < 0.005) {
+                    createRandomBubble();
+                }
+            }
+            
+            // Interaction: Pop the bubble on click
+            canvas.addEventListener('click', (event) => {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+
+                for (let i = bubbles.length - 1; i >= 0; i--) {
+                    const bubble = bubbles[i];
+                    const dist = Math.sqrt(Math.pow(mouseX - bubble.x, 2) + Math.pow(mouseY - bubble.y, 2));
+
+                    if (dist < bubble.radius) {
+                        // Pop the bubble
+                        bubbles.splice(i, 1);
+                        popCount++;
+                        popCountEl.textContent = popCount;
+
+                        // --- UPDATED SOUND LOGIC ---
+                        POP_SOUND.currentTime = 0; // Rewind to start for quick, repeated clicks
+                        POP_SOUND.play().catch(e => {
+                            // Catching potential promise rejection (e.g., browser autoplay policy)
+                            console.log("Audio playback prevented:", e);
+                        });
+                        
+                        // Break after popping one to prevent popping multiple that overlap
+                        break; 
+                    }
+                }
+            });
+
+            resetButton.addEventListener('click', initBubbles);
+
+            initBubbles();
+            animate();
+        });
+    </script>
+</body>
+</html>

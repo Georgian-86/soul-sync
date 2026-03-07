@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Mind Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .login-container {
+      width: 100%; max-width: 440px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      animation: slideUp 0.6s ease;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    .logo { text-align: center; margin-bottom: 30px; }
+    .logo h1 { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo p { color: #888; font-size: 14px; margin-top: 5px; }
+
+    .role-tabs { display: flex; gap: 8px; margin-bottom: 28px; background: #f0f0f5; border-radius: 12px; padding: 4px; }
+    .role-tab {
+      flex: 1; padding: 12px 8px; text-align: center; border-radius: 10px;
+      border: none; background: transparent; cursor: pointer;
+      font-family: inherit; font-size: 13px; font-weight: 500; color: #666;
+      transition: all 0.3s;
+    }
+    .role-tab.active { background: white; color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-weight: 600; }
+    .role-tab:hover:not(.active) { color: #333; }
+    .role-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; }
+    .form-group input {
+      width: 100%; padding: 12px 16px; border: 2px solid #e8e8ee; border-radius: 12px;
+      font-size: 15px; font-family: inherit; transition: all 0.3s;
+      background: #fafafe;
+    }
+    .form-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); background: white; }
+
+    .login-btn {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white; font-size: 16px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+    }
+    .login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.5); }
+    .login-btn:active { transform: translateY(0); }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .message { text-align: center; margin-top: 16px; font-size: 14px; min-height: 20px; }
+    .message.error { color: #e74c3c; }
+    .message.success { color: #27ae60; }
+
+    .footer-links { text-align: center; margin-top: 24px; font-size: 13px; color: #888; }
+    .footer-links a { color: #667eea; text-decoration: none; font-weight: 500; }
+    .footer-links a:hover { text-decoration: underline; }
+
+    .demo-info {
+      margin-top: 24px; padding: 16px; background: #f8f9ff; border-radius: 12px;
+      border: 1px solid #e8e8ff;
+    }
+    .demo-info h4 { font-size: 12px; color: #667eea; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .demo-info .cred { display: flex; justify-content: space-between; font-size: 12px; color: #666; padding: 4px 0; }
+    .demo-info .cred span:first-child { font-weight: 500; color: #444; }
+
+    .spinner { display: none; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <h1>🧠 Mind Tracker</h1>
+      <p>Your mental wellness companion</p>
+    </div>
+
+    <div class="role-tabs">
+      <button class="role-tab active" data-role="patient" onclick="selectRole('patient')">
+        <span class="role-icon">👤</span>Patient
+      </button>
+      <button class="role-tab" data-role="doctor" onclick="selectRole('doctor')">
+        <span class="role-icon">🩺</span>Psychologist
+      </button>
+      <button class="role-tab" data-role="admin" onclick="selectRole('admin')">
+        <span class="role-icon">⚙️</span>Admin
+      </button>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="Enter your email" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">
+        <span id="btnText">Sign In</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+    </form>
+
+    <div class="message" id="message"></div>
+
+    <div class="footer-links">
+      New patient? <a href="signup-new.html">Create an account</a>
+    </div>
+
+    <div class="demo-info">
+      <h4>Demo Credentials</h4>
+      <div class="cred"><span>Admin:</span><span>admin@mindtracker.com / admin123</span></div>
+      <div class="cred"><span>Doctor:</span><span>dr.smith@mindtracker.com / doctor123</span></div>
+      <div class="cred"><span>Patient:</span><span>demo@demo.com / demo123</span></div>
+    </div>
+  </div>
+
+  <script>
+    let selectedRole = 'patient';
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-role="${role}"]`).classList.add('active');
+      document.getElementById('message').textContent = '';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('loginBtn');
+      const msg = document.getElementById('message');
+
+      btn.disabled = true;
+      document.getElementById('btnText').style.display = 'none';
+      document.getElementById('spinner').style.display = 'block';
+      msg.textContent = '';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, role: selectedRole })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          msg.className = 'message success';
+          msg.textContent = 'Login successful! Redirecting...';
+          
+          // Store session
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('currentUserId', data.userId);
+          localStorage.setItem('userRole', data.role);
+          localStorage.setItem('userName', data.user.name);
+
+          // Redirect based on role
+          setTimeout(() => {
+            const routes = {
+              admin: 'admin-panel.html',
+              doctor: 'doctor-panel.html',
+              patient: 'patient-dashboard.html'
+            };
+            window.location.href = routes[data.role] || 'patient-dashboard.html';
+          }, 500);
+        } else {
+          msg.className = 'message error';
+          msg.textContent = data.message;
+        }
+      } catch (err) {
+        msg.className = 'message error';
+        msg.textContent = 'Cannot connect to server. Is it running?';
+      } finally {
+        btn.disabled = false;
+        document.getElementById('btnText').style.display = 'inline';
+        document.getElementById('spinner').style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

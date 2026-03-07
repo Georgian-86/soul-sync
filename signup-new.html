@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Mind Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif; min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .signup-container {
+      width: 100%; max-width: 440px; background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px); border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 40px;
+      animation: slideUp 0.6s ease;
+    }
+    @keyframes slideUp { from { opacity:0; transform: translateY(30px); } to { opacity:1; transform: translateY(0); } }
+    .logo { text-align: center; margin-bottom: 30px; }
+    .logo h1 { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo p { color: #888; font-size: 14px; margin-top: 5px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 12px 16px; border: 2px solid #e8e8ee; border-radius: 12px;
+      font-size: 15px; font-family: inherit; transition: all 0.3s; background: #fafafe;
+    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); background: white; }
+    .row { display: flex; gap: 12px; }
+    .row .form-group { flex: 1; }
+    .signup-btn {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white; font-size: 16px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(102,126,234,0.4); margin-top: 8px;
+    }
+    .signup-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.5); }
+    .signup-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .message { text-align: center; margin-top: 16px; font-size: 14px; min-height: 20px; }
+    .message.error { color: #e74c3c; } .message.success { color: #27ae60; }
+    .footer-links { text-align: center; margin-top: 24px; font-size: 13px; color: #888; }
+    .footer-links a { color: #667eea; text-decoration: none; font-weight: 500; }
+    .footer-links a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="signup-container">
+    <div class="logo">
+      <h1>🧠 Mind Tracker</h1>
+      <p>Start your wellness journey</p>
+    </div>
+    <form id="signupForm" onsubmit="handleSignup(event)">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" placeholder="Enter your full name" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="Enter your email" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Create a password" required minlength="6">
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label for="age">Age</label>
+          <input type="number" id="age" placeholder="Age" min="10" max="120">
+        </div>
+        <div class="form-group">
+          <label for="gender">Gender</label>
+          <select id="gender">
+            <option value="">Select</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+            <option value="prefer not to say">Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone (optional)</label>
+        <input type="tel" id="phone" placeholder="Phone number">
+      </div>
+      <button type="submit" class="signup-btn" id="signupBtn">Create Account</button>
+    </form>
+    <div class="message" id="message"></div>
+    <div class="footer-links">
+      Already have an account? <a href="login-page.html">Sign in</a>
+    </div>
+  </div>
+  <script>
+    async function handleSignup(e) {
+      e.preventDefault();
+      const btn = document.getElementById('signupBtn');
+      const msg = document.getElementById('message');
+      btn.disabled = true; btn.textContent = 'Creating account...';
+      msg.textContent = '';
+
+      const body = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+        age: document.getElementById('age').value || null,
+        gender: document.getElementById('gender').value || null,
+        phone: document.getElementById('phone').value || null
+      };
+
+      try {
+        const res = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          msg.className = 'message success';
+          msg.textContent = 'Account created! Redirecting...';
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('currentUserId', data.userId);
+          localStorage.setItem('userRole', 'patient');
+          localStorage.setItem('userName', body.name);
+          setTimeout(() => window.location.href = 'patient-dashboard.html', 800);
+        } else {
+          msg.className = 'message error';
+          msg.textContent = data.message;
+        }
+      } catch (err) {
+        msg.className = 'message error';
+        msg.textContent = 'Cannot connect to server.';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Create Account';
+      }
+    }
+  </script>
+</body>
+</html>

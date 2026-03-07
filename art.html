@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Therapy - SoulSync</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Art Therapy</h1>
+            <div>
+                <div id="user-info"></div>
+                <nav>
+                    <a href="patient-dashboard.html">Dashboard</a>
+                    <a href="journal.html">Journal</a>
+                    <a href="art.html" class="active">Art Therapy</a>
+                    <a href="music.html">Music</a>
+                    <a href="profile.html">Profile</a>
+                </nav>
+            </div>
+        </header>
+        <main class="art-container">
+            <div id="mode-selection">
+                <div class="mode-card" onclick="showMode('drawing')">
+                    <h3>Doodle & Mandala</h3>
+                    <p>Freeform drawing and symmetrical patterns.</p>
+                </div>
+                <div class="mode-card" onclick="showMode('coloring')">
+                    <h3>Coloring Book</h3>
+                    <p>Relax and fill in beautiful pre-drawn pictures.</p>
+                </div>
+            </div>
+
+            <div id="drawing-mode" class="art-mode">
+                <canvas id="artCanvas" width="940" height="500"></canvas>
+                <div class="art-controls">
+                    <button class="btn back-btn" onclick="showMode('selection')">← Back</button>
+                    <label>Mode:</label><select id="drawing-brush-mode">
+                        <option value="doodle">Doodle</option>
+                        <option value="mandala-6">Mandala (6)</option>
+                    </select>
+                    <label>Color:</label><input type="color" id="colorPicker" value="#5c5c8e">
+                    <label>Size:</label><input type="range" id="brushSize" min="1" max="50" value="5">
+                    <button class="btn" id="clearBtn">Clear</button>
+                </div>
+            </div>
+
+            <div id="coloring-mode" class="art-mode">
+                <div id="coloring-book-controls">
+                    <div id="image-thumbnails"></div>
+                    <label>Fill Color:</label><input type="color" id="fillColorPicker" value="#fbc2eb">
+                </div>
+                <div id="coloring-canvas"></div>
+                <div class="art-controls"><button class="btn back-btn" onclick="showMode('selection')">← Back</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div style="display: none;">
+    </div>
+
+    <script>
+        // Auth Check
+        const userId = localStorage.getItem('currentUserId');
+        const userName = localStorage.getItem('userName');
+        if (!userId) {
+            window.location.href = 'login-page.html';
+        } else {
+            document.getElementById('user-info').innerHTML = `Logged in as: <a href="profile.html">${userName || 'User'}</a>`;
+        }
+        // Mode Management
+        // Mode Management
+        function showMode(mode) {
+            const selection = document.getElementById('mode-selection');
+            const drawingMode = document.getElementById('drawing-mode');
+            const coloringMode = document.getElementById('coloring-mode');
+
+            if (mode === 'selection') {
+                selection.style.display = 'grid';
+                drawingMode.style.display = 'none';
+                coloringMode.style.display = 'none';
+            } else if (mode === 'drawing') {
+                selection.style.display = 'none';
+                drawingMode.style.display = 'block';
+                coloringMode.style.display = 'none';
+                initDrawing();
+            } else if (mode === 'coloring') {
+                selection.style.display = 'none';
+                drawingMode.style.display = 'none';
+                coloringMode.style.display = 'block';
+                initColoring();
+            }
+        }
+
+        // --- DRAWING MODE ---
+        let canvas, ctx, isDrawing = false;
+        let currentColor = '#5c5c8e';
+        let brushSize = 5;
+        let drawingMode = 'doodle';
+
+        function initDrawing() {
+            canvas = document.getElementById('artCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Set up canvas
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Event listeners
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            // Touch support
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+
+            // Controls
+            document.getElementById('colorPicker').addEventListener('change', (e) => {
+                currentColor = e.target.value;
+            });
+
+            document.getElementById('brushSize').addEventListener('input', (e) => {
+                brushSize = e.target.value;
+            });
+
+            document.getElementById('drawing-brush-mode').addEventListener('change', (e) => {
+                drawingMode = e.target.value;
+            });
+
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            });
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getMousePos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            const pos = getMousePos(e);
+
+            if (drawingMode === 'doodle') {
+                drawLine(pos.x, pos.y);
+            } else if (drawingMode.startsWith('mandala')) {
+                const segments = parseInt(drawingMode.split('-')[1]);
+                drawMandala(pos.x, pos.y, segments);
+            }
+        }
+
+        function drawLine(x, y) {
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = brushSize;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+
+        function drawMandala(x, y, segments) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            // Calculate relative position from center
+            const relX = x - centerX;
+            const relY = y - centerY;
+
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = brushSize;
+
+            // Draw symmetrical points
+            for (let i = 0; i < segments; i++) {
+                const angle = (Math.PI * 2 * i) / segments;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+
+                // Rotate the point around center
+                const newX = centerX + (relX * cos - relY * sin);
+                const newY = centerY + (relX * sin + relY * cos);
+
+                ctx.lineTo(newX, newY);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(newX, newY);
+            }
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        // --- COLORING MODE ---
+        const coloringImages = [
+            { name: 'Butterfly', path: 'M 50 80 Q 30 50 50 20 Q 70 50 50 80 M 50 20 Q 20 30 10 50 Q 20 70 50 80 M 50 20 Q 80 30 90 50 Q 80 70 50 80' },
+            { name: 'Flower', path: 'M 50 50 m -20 0 a 20 20 0 1 0 40 0 a 20 20 0 1 0 -40 0 M 50 30 a 15 15 0 1 0 0 -20 M 70 50 a 15 15 0 1 0 20 0 M 50 70 a 15 15 0 1 0 0 20 M 30 50 a 15 15 0 1 0 -20 0' },
+            { name: 'Heart', path: 'M 50 80 Q 20 50 20 35 Q 20 20 35 20 Q 50 20 50 35 Q 50 20 65 20 Q 80 20 80 35 Q 80 50 50 80' },
+            { name: 'Star', path: 'M 50 10 L 61 40 L 95 40 L 68 60 L 79 90 L 50 70 L 21 90 L 32 60 L 5 40 L 39 40 Z' },
+            { name: 'Tree', path: 'M 45 90 L 45 50 L 55 50 L 55 90 M 50 50 L 30 70 L 70 70 Z M 50 40 L 25 60 L 75 60 Z M 50 30 L 20 50 L 80 50 Z' },
+            { name: 'Sun', path: 'M 50 50 m -15 0 a 15 15 0 1 0 30 0 a 15 15 0 1 0 -30 0 M 50 10 L 50 25 M 50 75 L 50 90 M 10 50 L 25 50 M 75 50 L 90 50 M 20 20 L 30 30 M 70 70 L 80 80 M 80 20 L 70 30 M 30 70 L 20 80' }
+        ];
+
+        let currentFillColor = '#fbc2eb';
+        let selectedSvgIndex = 0;
+
+        function initColoring() {
+            currentFillColor = document.getElementById('fillColorPicker').value;
+
+            document.getElementById('fillColorPicker').addEventListener('change', (e) => {
+                currentFillColor = e.target.value;
+            });
+
+            renderThumbnails();
+            renderColoringCanvas(0);
+        }
+
+        function renderThumbnails() {
+            const container = document.getElementById('image-thumbnails');
+            container.innerHTML = '';
+
+            coloringImages.forEach((img, index) => {
+                const thumb = document.createElement('div');
+                thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
+                thumb.innerHTML = `
+            <svg viewBox="0 0 100 100" width="80" height="80">
+                <path d="${img.path}" fill="none" stroke="#333" stroke-width="2"/>
+            </svg>
+            <p>${img.name}</p>
+        `;
+                thumb.onclick = () => selectImage(index);
+                container.appendChild(thumb);
+            });
+        }
+
+        function selectImage(index) {
+            selectedSvgIndex = index;
+            document.querySelectorAll('.thumbnail').forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+            renderColoringCanvas(index);
+        }
+
+        function renderColoringCanvas(index) {
+            const container = document.getElementById('coloring-canvas');
+            const img = coloringImages[index];
+
+            container.innerHTML = `
+        <svg id="coloringSvg" viewBox="0 0 100 100" width="600" height="600">
+            <rect width="100" height="100" fill="white"/>
+            <path d="${img.path}" fill="white" stroke="#333" stroke-width="1.5" style="cursor: pointer;"/>
+        </svg>
+    `;
+
+            const path = container.querySelector('path');
+            path.addEventListener('click', function () {
+                this.setAttribute('fill', currentFillColor);
+            });
+        }
+
+        // Initialize with selection screen
+        showMode('selection');
+        ;
+
+        // --- PASTE YOUR FULL ART THERAPY SCRIPT HERE ---
+        // The one starting with `function showMode(mode)`
+    </script>
+</body>
+
+</html>

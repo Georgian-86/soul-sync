@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - SoulSync</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>My Profile</h1>
+            <div>
+                <div id="user-info"></div>
+                <nav>
+                    <a href="patient-dashboard.html">Dashboard</a>
+                    <a href="journal.html">Journal</a>
+                    <a href="art.html">Art Therapy</a>
+                    <a href="music.html">Music</a>
+                    <a href="profile.html" class="active">Profile</a>
+                </nav>
+            </div>
+        </header>
+        <main>
+            <h2 style="text-align: center;">Update Your Details</h2>
+            <form id="profileForm" class="profile-form">
+                <div class="form-group"><label for="name">Name</label><input type="text" id="name" required></div>
+                <div class="form-group"><label for="email">Email ID</label><input type="email" id="email" required>
+                </div>
+                <div class="form-group"><label for="phone">Phone No</label><input type="tel" id="phone"></div>
+                <div class="form-group"><label for="age">Age</label><input type="number" id="age"></div>
+                <div class="form-group"><label for="gender">Gender</label><select id="gender">
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                        <option value="non-binary">Non-binary</option>
+                        <option value="prefer-not-to-say">Prefer not to say</option>
+                    </select></div>
+                <button type="submit" class="btn">Update Profile</button>
+                <button type="button" class="btn" onclick="logout()"
+                    style="background-image: none; background-color: var(--secondary-text); margin-top: 10px;">Log
+                    Out</button>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        const API = 'http://localhost:3000';
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentUserId = localStorage.getItem('currentUserId');
+            if (!currentUserId) { window.location.href = 'login-page.html'; return; }
+
+            try {
+                const response = await fetch(`${API}/getUserDetails/${currentUserId}`);
+                const user = await response.json();
+                if (user && user.name) {
+                    document.getElementById('user-info').innerHTML = `Logged in as: <a href="profile.html">${user.name}</a>`;
+                    document.getElementById('name').value = user.name || '';
+                    document.getElementById('email').value = user.email || '';
+                    document.getElementById('phone').value = user.phone_number || '';
+                    document.getElementById('age').value = user.age || '';
+                    document.getElementById('gender').value = user.gender || 'prefer-not-to-say';
+                } else {
+                    window.location.href = 'login-page.html';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        // Button state UX
+        const submitBtn = document.querySelector('.btn[type="submit"]');
+        function updateSubmitButton() {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            if (name && email) {
+                submitBtn.style.backgroundImage = 'none';
+                submitBtn.style.backgroundColor = '#1a1a2e';
+                submitBtn.style.color = 'white';
+            } else {
+                submitBtn.style.backgroundImage = '';
+                submitBtn.style.backgroundColor = '';
+                submitBtn.style.color = '';
+            }
+        }
+        document.getElementById('name').addEventListener('input', updateSubmitButton);
+        document.getElementById('email').addEventListener('input', updateSubmitButton);
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userData = {
+                userId: localStorage.getItem('currentUserId'),
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                phone: document.getElementById("phone").value,
+                age: document.getElementById("age").value,
+                gender: document.getElementById("gender").value,
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                const response = await fetch(`${API}/updateUser`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                if (response.ok) {
+                    localStorage.setItem('userName', userData.name);
+                    submitBtn.textContent = '✓ Profile Updated!';
+                    submitBtn.style.backgroundColor = '#059669';
+                    document.getElementById('user-info').innerHTML = `Logged in as: <a href="profile.html">${userData.name}</a>`;
+                    setTimeout(() => { submitBtn.textContent = 'Update Profile'; submitBtn.disabled = false; updateSubmitButton(); }, 2000);
+                } else {
+                    alert('Failed to update profile.');
+                    submitBtn.textContent = 'Update Profile'; submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Error: Server not reached.');
+                submitBtn.textContent = 'Update Profile'; submitBtn.disabled = false;
+            }
+        });
+
+        function logout() {
+            // Clear all data related to the user session
+            localStorage.removeItem('currentUserId');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('soulSyncUser');
+            localStorage.removeItem('soulSyncJournal');
+            localStorage.removeItem('soulSyncMoods');
+            window.location.href = 'login-page.html';
+        }
+    </script>
+</body>
+
+</html>

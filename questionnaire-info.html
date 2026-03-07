@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Before You Begin - Mind Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .info-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .info-section {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .info-section h3 {
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .info-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .info-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent-blue);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .question-count {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin: 20px 0;
+        }
+        
+        .skip-notice {
+            background: linear-gradient(135deg, #fff3cd, #f8d7da);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .voice-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="voice-toggle" id="voiceToggle">
+        <span id="voiceIcon">🔊</span>
+        <span id="voiceText">Voice On</span>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Welcome to Your Mental Wellness Journey</h1>
+        </header>
+        <main class="info-container">
+            <h2 style="text-align: center; margin-bottom: 30px;">Before You Begin</h2>
+
+            <div class="info-section">
+                <h3>📋 About the Questionnaire</h3>
+                <p>This brief assessment helps us understand your current mental and emotional state so we can provide personalized support and recommendations.</p>
+            </div>
+
+            <div class="info-section">
+                <div class="question-count">15 Questions</div>
+                <p style="text-align: center; color: var(--secondary-text);">
+                    Estimated time: 5-7 minutes
+                </p>
+            </div>
+
+            <div class="info-section">
+                <h3>🎯 Why We Ask These Questions</h3>
+                <ul class="info-list">
+                    <li>To understand your current emotional well-being</li>
+                    <li>To identify patterns that might affect your mental health</li>
+                    <li>To personalize your dashboard and recommendations</li>
+                    <li>To suggest appropriate coping strategies</li>
+                    <li>To determine if professional support would be beneficial</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h3>🔒 Your Privacy Matters</h3>
+                <ul class="info-list">
+                    <li>All responses are confidential and encrypted</li>
+                    <li>Your data is never shared without your consent</li>
+                    <li>You can review or delete your data anytime</li>
+                    <li>No question is mandatory - you can skip any question</li>
+                </ul>
+            </div>
+
+            <div class="skip-notice">
+                <strong>⏭️ Can I Skip Questions?</strong><br>
+                Yes! While we recommend answering all questions for accurate personalization, you can skip any question that makes you uncomfortable. Just click the "Skip" button on each question.
+            </div>
+
+            <div class="info-section">
+                <h3>💡 Tips for Best Results</h3>
+                <ul class="info-list">
+                    <li>Find a quiet, comfortable space</li>
+                    <li>Answer honestly - there are no right or wrong answers</li>
+                    <li>Take your time with each question</li>
+                    <li>Think about how you've been feeling recently (past 2 weeks)</li>
+                </ul>
+            </div>
+
+            <div class="button-group">
+                <button onclick="window.location.href='questionnaire.html'" class="btn" style="flex: 1;">
+                    Begin Questionnaire
+                </button>
+                <button onclick="window.location.href='dashboard.html'" class="btn" style="flex: 0.5; background: var(--secondary-text);">
+                    Skip for Now
+                </button>
+            </div>
+
+            <p style="text-align: center; margin-top: 20px; color: var(--secondary-text); font-size: 0.9rem;">
+                If you're experiencing a mental health emergency, please call your local crisis helpline immediately.
+            </p>
+        </main>
+    </div>
+
+    <script>
+        let voiceEnabled = localStorage.getItem('voiceEnabled') !== 'false';
+        
+        function speak(text) {
+            if (!voiceEnabled) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Voice toggle
+        document.getElementById('voiceToggle').addEventListener('click', () => {
+            voiceEnabled = !voiceEnabled;
+            localStorage.setItem('voiceEnabled', voiceEnabled);
+            document.getElementById('voiceIcon').textContent = voiceEnabled ? '🔊' : '🔇';
+            document.getElementById('voiceText').textContent = voiceEnabled ? 'Voice On' : 'Voice Off';
+            speak(voiceEnabled ? "Voice instructions enabled" : "Voice instructions disabled");
+        });
+
+        // Set initial state
+        document.getElementById('voiceIcon').textContent = voiceEnabled ? '🔊' : '🔇';
+        document.getElementById('voiceText').textContent = voiceEnabled ? 'Voice On' : 'Voice Off';
+
+        // Welcome message
+        setTimeout(() => {
+            speak("Welcome to your mental wellness journey. This questionnaire contains 15 questions and takes about 5 to 7 minutes. All your responses are confidential. You can skip any question you're uncomfortable answering. When you're ready, click Begin Questionnaire to start.");
+        }, 1000);
+    </script>
+</body>
+</html>

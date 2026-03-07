@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SoulSync</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>SoulSync</h1>
+            <div>
+                <div id="user-info"></div>
+                <nav>
+                    <a href="dashboard.html" class="active">Dashboard</a>
+                    <a href="journal.html">Journal</a>
+                    <a href="art.html">Art Therapy</a>
+                    <a href="music.html">Music</a>
+                    <a href="profile.html">Profile</a>
+                </nav>
+            </div>
+        </header>
+        <main>
+            <h2>Welcome, <span id="userName">User</span> ♡</h2>
+
+            <div class="dashboard-section-top">
+                <div class="grid-item mood-tracker">
+                    <h3>Today's Hourly Mood</h3>
+                    <p style="text-align:center; margin-top:-10px; margin-bottom: 20px;">Select an hour, then choose
+                        your mood.</p>
+                    <div id="timeline" class="timeline"></div>
+
+                    <div class="mood-options" style="margin-top: 20px;">
+                        <div class="mood" data-mood="joyful">
+                            <div class="emoji">🥳</div><span>Joyful</span>
+                        </div>
+                        <div class="mood" data-mood="happy">
+                            <div class="emoji">😊</div><span>Happy</span>
+                        </div>
+                        <div class="mood" data-mood="calm">
+                            <div class="emoji">🧘‍♀️</div><span>Calm</span>
+                        </div>
+                        <div class="mood" data-mood="neutral">
+                            <div class="emoji">😐</div><span>Neutral</span>
+                        </div>
+                        <div class="mood" data-mood="stressed">
+                            <div class="emoji">🤯</div><span>Stressed</span>
+                        </div>
+                        <div class="mood" data-mood="sad">
+                            <div class="emoji">😔</div><span>Sad</span>
+                        </div>
+                        <div class="mood" data-mood="angry">
+                            <div class="emoji">😡</div><span>Angry</span>
+                        </div>
+                        <div class="mood" data-mood="tired">
+                            <div class="emoji">😴</div><span>Tired</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-item mood-analysis">
+                    <h3>Mood Trend Analysis</h3>
+                    <p style="color: var(--secondary-text); text-align: center; margin-bottom: 15px;">A glance at your
+                        recent emotional data.</p>
+
+                    <div class="chart-placeholder">
+                        Mood Trend Chart (Last 7 Days)
+                    </div>
+
+                    <div class="analysis-summary">
+                        <h4>Insights:</h4>
+                        <ul>
+                            <li><strong>Most Common Mood:</strong> Calm (4 days last week)</li>
+                            <li><strong>Highest Stress Day:</strong> Tuesday</li>
+                            <li><strong>Recommendation:</strong> Try the "Bubble Pop" game today!</li>
+                        </ul>
+                        <a href="game.html" class="btn btn-secondary" style="margin-top: 15px;">Play Stress Game</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-section-bottom">
+                <div class="grid-item calendar">
+                    <h3>Monthly Mood Overview</h3>
+                    <div id="calendar-header">
+                        <button id="prevMonthBtn" class="btn-calendar">&lt;</button>
+                        <h4 id="monthYear" style="margin:0;"></h4>
+                        <button id="nextMonthBtn" class="btn-calendar">&gt;</button>
+                    </div>
+                    <div class="calendar-grid" id="calendar-days-header"></div>
+                    <div class="calendar-grid" id="calendar-body"></div>
+                </div>
+
+                <div class="grid-item doctor-info">
+                    <h3>My Doctor</h3>
+                    <p><strong>Name:</strong> Dr. Ananya Verma</p>
+                    <p><strong>Next Appointment:</strong> 25 Sep 2025</p>
+                    <a href="profile.html" class="btn" style="margin-top: 20px;">View Profile</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const currentUserId = localStorage.getItem('currentUserId');
+        let currentDate = new Date();
+        // Initializing data structure for mood logs
+        const moodLogs = JSON.parse(localStorage.getItem('soulSyncMoods')) || {};
+        let selectedHour = null;
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch(`http://localhost:3000/getUserDetails/${currentUserId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                const user = JSON.parse(await response.text());
+                if (Object.keys(user).length > 0) {
+                    document.getElementById('userName').textContent = user.name;
+                    document.getElementById('user-info').innerHTML = `Logged in as: <a href="profile.html">${user.name}</a>`;
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserInfo();
+            renderHourlyTracker();
+            renderCalendar();
+        }, { once: true });
+
+        // Function to return the correct emoji for all 8 moods
+        function getEmojiForMood(mood) {
+            const emojis = {
+                joyful: '🥳',
+                happy: '😊',
+                calm: '🧘‍♀️',
+                neutral: '😐',
+                stressed: '🤯',
+                sad: '😔',
+                angry: '😡',
+                tired: '😴'
+            };
+            return emojis[mood] || '';
+        }
+
+        async function renderHourlyTracker() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+            const today = new Date();
+            const dateKey = new Date().toISOString().split('T')[0];
+            let moods = [];
+            try {
+                const response = await fetch(`http://localhost:3000/getUserMoods/${currentUserId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                const data = await response.json();
+                moods = Array.isArray(data) ? data : [];
+            } catch (error) {
+                console.error(error);
+            }
+
+            for (let i = 0; i < 12; i++) {
+                const hour = i + 8;
+                const hourSlot = document.createElement('div');
+                hourSlot.classList.add('hour-slot');
+                hourSlot.dataset.hour = hour;
+
+                const timeLabel = document.createElement('span');
+                timeLabel.textContent = `${hour}:00`;
+                hourSlot.appendChild(timeLabel);
+
+                const moodEntry = moods.find(mood => mood.log_hour === hour);
+                if (moodEntry) {
+                    const emojiNode = document.createTextNode(getEmojiForMood(moodEntry.mood_type));
+                    hourSlot.appendChild(emojiNode);
+                }
+
+                hourSlot.addEventListener('click', () => {
+                    document.querySelectorAll('.hour-slot').forEach(slot => slot.classList.remove('active'));
+                    hourSlot.classList.add('active');
+                    selectedHour = hour;
+                });
+                timeline.appendChild(hourSlot);
+            }
+        }
+
+        function renderCalendar() {
+            const calendarBody = document.getElementById('calendar-body');
+            const monthYearEl = document.getElementById('monthYear');
+            const daysHeader = document.getElementById('calendar-days-header');
+            calendarBody.innerHTML = '';
+            daysHeader.innerHTML = '';
+
+            // Render Day Names
+            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+                daysHeader.innerHTML += `<div class="day-name">${day}</div>`;
+            });
+
+            const today = new Date();
+            const month = currentDate.getMonth();
+            const year = currentDate.getFullYear();
+
+            monthYearEl.textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
+
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Add empty days for offset
+            for (let i = 0; i < firstDayOfMonth; i++) { calendarBody.innerHTML += `<div class="day"></div>`; }
+
+            // Render actual days
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayEl = document.createElement('div');
+                dayEl.classList.add('day', 'current-month');
+                dayEl.innerHTML = `<span>${i}</span>`;
+
+                if (i === today.getDate() && year === today.getFullYear() && month === today.getMonth()) {
+                    dayEl.classList.add('today');
+                }
+
+                const dateKey = `${year}-${month + 1}-${i}`;
+                if (moodLogs[dateKey]) {
+                    const moodsForDay = Object.values(moodLogs[dateKey]);
+                    if (moodsForDay.length > 0) {
+                        // Find the most common mood for the calendar
+                        const moodCounts = moodsForDay.reduce((acc, mood) => {
+                            acc[mood] = (acc[mood] || 0) + 1;
+                            return acc;
+                        }, {});
+                        let mostCommonMood = Object.keys(moodCounts).reduce((a, b) => moodCounts[a] > moodCounts[b] ? a : b);
+
+                        const emojiEl = document.createElement('div');
+                        emojiEl.className = 'mood-emoji-small';
+                        emojiEl.textContent = getEmojiForMood(mostCommonMood);
+                        dayEl.appendChild(emojiEl);
+                        dayEl.classList.add(`mood-${mostCommonMood}`);
+                    }
+                }
+                calendarBody.appendChild(dayEl);
+            }
+        }
+        // --- NEW FUNCTION: Apply Theme Based on Mood ---
+        function applyMoodTheme(mood) {
+            const body = document.body;
+            // 1. Define mood to theme class mapping
+            const moodThemes = {
+                'happy': 'theme-happy',
+                'calm': 'theme-calm',
+                'okay': 'theme-calm', // Re-using calm theme for okay
+                'sad': 'theme-sad',
+                'anxious': 'theme-anxious'
+            };
+
+            // 2. Clear all previous mood themes
+            Object.values(moodThemes).forEach(theme => {
+                body.classList.remove(theme);
+            });
+
+            // 3. Apply the new theme
+            const newTheme = moodThemes[mood];
+            if (newTheme) {
+                body.classList.add(newTheme);
+            }
+        }
+
+        // Mood Selection Logic
+        document.querySelectorAll('.mood').forEach(moodEl => {
+            moodEl.addEventListener('click', async () => {
+                if (selectedHour === null) { alert('Please select an hour first!'); return; }
+
+                document.querySelectorAll('.mood').forEach(el => el.classList.remove('selected'));
+                moodEl.classList.add('selected');
+
+                const mood = moodEl.dataset.mood;
+                const today = new Date();
+                const dateKey = new Date().toISOString().split('T')[0];
+
+                console.log(selectedHour)
+                const moodData = {
+                    userId: currentUserId,
+                    logDate: dateKey,
+                    logHour: selectedHour,
+                    mood
+                };
+
+                try {
+                    const response = await fetch('http://localhost:3000/addMood', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(moodData)
+                    });
+
+                    const data = await response.text(); // Get the string back
+                    localStorage.setItem('currentUserId', JSON.parse(data).userId);
+                } catch (error) {
+                    document.getElementById('responseMessage').innerText = "Error: Server not reached.";
+                    console.error(error);
+                }
+
+                if (!moodLogs[dateKey]) { moodLogs[dateKey] = {}; }
+                moodLogs[dateKey][selectedHour] = mood;
+
+                renderHourlyTracker();
+                renderCalendar();
+
+                // Reset selection after a brief delay
+                setTimeout(() => {
+                    moodEl.classList.remove('selected');
+                    document.querySelector('.hour-slot.active')?.classList.remove('active');
+                    selectedHour = null;
+                }, 500);
+            });
+        });
+
+        // Calendar Navigation
+        document.getElementById('prevMonthBtn').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+        document.getElementById('nextMonthBtn').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal - SoulSync</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+        /* Top Nav */
+        .top-nav {
+            background: white; border-bottom: 1px solid #e8e8ee;
+            padding: 0 32px; display: flex; align-items: center; justify-content: space-between;
+            height: 60px; position: sticky; top: 0; z-index: 50;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .nav-brand { font-size: 20px; font-weight: 700; color: #1a1a2e; display: flex; align-items: center; gap: 8px; }
+        .nav-links { display: flex; gap: 4px; }
+        .nav-links a {
+            padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            color: #666; text-decoration: none; transition: all 0.2s;
+        }
+        .nav-links a:hover { color: #1a1a2e; background: #f5f5f5; }
+        .nav-links a.active { color: white; background: #1a1a2e; }
+        .nav-user { font-size: 13px; color: #888; }
+        .nav-user strong { color: #1a1a2e; }
+
+        .page-wrapper { max-width: 800px; margin: 0 auto; padding: 32px 24px; }
+
+        /* Tab Strip */
+        .journal-tabs {
+            display: flex; gap: 4px; background: white; border-radius: 12px;
+            padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 24px; width: fit-content;
+        }
+        .journal-tab {
+            padding: 10px 24px; border: none; background: transparent; border-radius: 8px;
+            font-family: inherit; font-size: 14px; font-weight: 500; color: #888;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .journal-tab.active { background: #1a1a2e; color: white; }
+        .journal-tab:hover:not(.active) { color: #333; background: #f5f5f5; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Write Card */
+        .write-card {
+            background: white; border-radius: 16px; padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .write-card h2 { font-size: 18px; font-weight: 600; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input[type="text"] {
+            width: 100%; padding: 12px 16px; border: 2px solid #e8e8ee; border-radius: 10px;
+            font-family: inherit; font-size: 14px; transition: border-color 0.2s; background: #fafafa;
+        }
+        .form-group input[type="text"]:focus { outline: none; border-color: #667eea; background: white; }
+        .form-group textarea {
+            width: 100%; padding: 16px; border: 2px solid #e8e8ee; border-radius: 10px;
+            font-family: inherit; font-size: 14px; transition: border-color 0.2s; resize: vertical;
+            min-height: 180px; background: #fafafa; line-height: 1.6;
+        }
+        .form-group textarea:focus { outline: none; border-color: #667eea; background: white; }
+
+        /* Mood Selector */
+        .mood-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+        .mood-selector input[type="radio"] { display: none; }
+        .mood-selector label {
+            padding: 8px 16px; border: 2px solid #e8e8ee; border-radius: 20px;
+            font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+            color: #666; background: #fafafa;
+        }
+        .mood-selector label:hover { border-color: #667eea; color: #333; }
+        .mood-selector input:checked + label {
+            border-color: #1a1a2e; background: #1a1a2e; color: white;
+        }
+
+        .save-btn {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, #a6c1ee, #c4b5fd); color: white;
+            font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s; margin-top: 8px;
+        }
+        .save-btn.ready { background: #1a1a2e; box-shadow: 0 4px 15px rgba(26,26,46,0.3); }
+        .save-btn:hover { transform: translateY(-1px); }
+        .save-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .save-btn.success { background: #059669; }
+
+        /* Past Entries */
+        .entries-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .entries-header h2 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .entry-count { font-size: 12px; color: #888; background: #f0f0f0; padding: 4px 10px; border-radius: 12px; }
+
+        .entry-card {
+            background: white; border-radius: 14px; padding: 20px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 12px;
+            border-left: 4px solid #e8e8ee; transition: all 0.2s; cursor: default;
+        }
+        .entry-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .entry-card.mood-happy { border-left-color: #10b981; }
+        .entry-card.mood-calm { border-left-color: #667eea; }
+        .entry-card.mood-okay { border-left-color: #f59e0b; }
+        .entry-card.mood-sad { border-left-color: #6366f1; }
+        .entry-card.mood-anxious { border-left-color: #ef4444; }
+        .entry-card.mood-stressed { border-left-color: #dc2626; }
+        .entry-card.mood-joyful { border-left-color: #fbbf24; }
+
+        .entry-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .entry-title { font-size: 15px; font-weight: 600; color: #1a1a2e; }
+        .entry-date { font-size: 11px; color: #999; background: #f5f5f5; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+        .entry-mood-badge {
+            display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px;
+            border-radius: 12px; margin-bottom: 8px;
+        }
+        .entry-mood-badge.happy { background: #d1fae5; color: #065f46; }
+        .entry-mood-badge.calm { background: #dbeafe; color: #1e40af; }
+        .entry-mood-badge.okay { background: #fef3c7; color: #92400e; }
+        .entry-mood-badge.sad { background: #ede9fe; color: #5b21b6; }
+        .entry-mood-badge.anxious { background: #fee2e2; color: #991b1b; }
+        .entry-mood-badge.stressed { background: #fee2e2; color: #991b1b; }
+        .entry-mood-badge.joyful { background: #fef3c7; color: #92400e; }
+        .entry-content { font-size: 13px; color: #555; line-height: 1.6; }
+
+        .no-entries { text-align: center; padding: 48px 20px; color: #999; }
+        .no-entries span { font-size: 48px; display: block; margin-bottom: 12px; }
+        .no-entries p { font-size: 14px; }
+
+        @media (max-width: 640px) {
+            .top-nav { padding: 0 16px; }
+            .nav-links a { padding: 6px 10px; font-size: 12px; }
+            .page-wrapper { padding: 20px 16px; }
+            .write-card { padding: 24px 20px; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-nav">
+        <div class="nav-brand">📝 Journal</div>
+        <div class="nav-links">
+            <a href="patient-dashboard.html">Dashboard</a>
+            <a href="journal.html" class="active">Journal</a>
+            <a href="art.html">Art Therapy</a>
+            <a href="music.html">Music</a>
+            <a href="profile.html">Profile</a>
+        </div>
+        <div class="nav-user" id="user-info"></div>
+    </div>
+
+    <div class="page-wrapper">
+        <div class="journal-tabs">
+            <button class="journal-tab active" onclick="switchJournalTab('write')">✏️ Write</button>
+            <button class="journal-tab" onclick="switchJournalTab('entries')">📖 Past Entries</button>
+        </div>
+
+        <!-- Write Tab -->
+        <div id="tab-write" class="tab-panel active">
+            <div class="write-card">
+                <h2>✨ Write Your Thoughts</h2>
+                <form id="journalForm">
+                    <div class="form-group">
+                        <label for="entryTitle">Title</label>
+                        <input type="text" id="entryTitle" placeholder="What is this entry about?" required>
+                    </div>
+                    <div class="form-group">
+                        <label>How are you feeling?</label>
+                        <div class="mood-selector">
+                            <input type="radio" id="jm_happy" name="entryMood" value="happy" required>
+                            <label for="jm_happy">🌸 Happy</label>
+                            <input type="radio" id="jm_calm" name="entryMood" value="calm">
+                            <label for="jm_calm">🤍 Calm</label>
+                            <input type="radio" id="jm_okay" name="entryMood" value="okay">
+                            <label for="jm_okay">✨ Okay</label>
+                            <input type="radio" id="jm_sad" name="entryMood" value="sad">
+                            <label for="jm_sad">🌙 Sad</label>
+                            <input type="radio" id="jm_anxious" name="entryMood" value="anxious">
+                            <label for="jm_anxious">☁️ Anxious</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="journalText">Your Entry</label>
+                        <textarea id="journalText" placeholder="Let your thoughts flow freely..." required></textarea>
+                    </div>
+                    <button type="submit" class="save-btn" id="saveBtn">Save Entry</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Past Entries Tab -->
+        <div id="tab-entries" class="tab-panel">
+            <div class="entries-header">
+                <h2>📖 Your Journal</h2>
+                <span class="entry-count" id="entryCount">0 entries</span>
+            </div>
+            <div id="entriesList">
+                <div class="no-entries"><span>📝</span><p>Loading entries...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:3000';
+        const userId = localStorage.getItem('currentUserId');
+        const userName = localStorage.getItem('userName');
+        if (!userId) { window.location.href = 'login-page.html'; }
+        if (userName) { document.getElementById('user-info').innerHTML = `Logged in as: <strong>${userName}</strong>`; }
+
+        const saveBtn = document.getElementById('saveBtn');
+
+        function updateSaveButton() {
+            const title = document.getElementById('entryTitle').value.trim();
+            const text = document.getElementById('journalText').value.trim();
+            const mood = document.querySelector('input[name="entryMood"]:checked');
+            saveBtn.classList.toggle('ready', !!(title && text && mood));
+        }
+
+        document.getElementById('entryTitle').addEventListener('input', updateSaveButton);
+        document.getElementById('journalText').addEventListener('input', updateSaveButton);
+        document.querySelectorAll('input[name="entryMood"]').forEach(r => r.addEventListener('change', updateSaveButton));
+
+        function switchJournalTab(tab) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.querySelectorAll('.journal-tab').forEach(t => t.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            if (tab === 'entries') loadPastEntries();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { loadPastEntries(); });
+
+        async function loadPastEntries() {
+            const entriesList = document.getElementById('entriesList');
+            try {
+                const res = await fetch(`${API}/getJournalEntries/${userId}`);
+                const entries = await res.json();
+                if (!entries || entries.length === 0) {
+                    entriesList.innerHTML = '<div class="no-entries"><span>📝</span><p>No entries yet. Start writing your first journal entry!</p></div>';
+                    document.getElementById('entryCount').textContent = '0 entries';
+                    return;
+                }
+                document.getElementById('entryCount').textContent = entries.length + ' entries';
+                entriesList.innerHTML = entries.slice(0, 20).map(entry => {
+                    const mood = entry.mood || '';
+                    const emoji = { happy:'🌸', calm:'🤍', okay:'✨', sad:'🌙', anxious:'☁️', stressed:'🤯', joyful:'🥳' }[mood] || '';
+                    return `
+                        <div class="entry-card mood-${mood}">
+                            <div class="entry-top">
+                                <div class="entry-title">${esc(entry.title || 'Untitled')}</div>
+                                <div class="entry-date">${formatDate(entry.entry_date)}</div>
+                            </div>
+                            ${mood ? `<span class="entry-mood-badge ${mood}">${emoji} ${mood.charAt(0).toUpperCase() + mood.slice(1)}</span>` : ''}
+                            <div class="entry-content">${esc((entry.content || '').substring(0, 300))}${entry.content && entry.content.length > 300 ? '...' : ''}</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error('Load entries error:', e);
+                entriesList.innerHTML = '<div class="no-entries"><span>⚠️</span><p>Failed to load entries.</p></div>';
+            }
+        }
+
+        function formatDate(d) {
+            if (!d) return '';
+            const date = new Date(d + 'T00:00:00');
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function esc(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+
+        document.getElementById('journalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('entryTitle').value;
+            const text = document.getElementById('journalText').value;
+            const moodEl = document.querySelector('input[name="entryMood"]:checked');
+            if (!moodEl) { alert('Please select a mood.'); return; }
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(`${API}/addJournalEntry`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, date: new Date().toISOString().split('T')[0], text, title, mood: moodEl.value })
+                });
+                if (res.ok) {
+                    document.getElementById('journalForm').reset();
+                    updateSaveButton();
+                    saveBtn.textContent = '✓ Entry Saved!';
+                    saveBtn.classList.remove('ready');
+                    saveBtn.classList.add('success');
+                    setTimeout(() => { saveBtn.textContent = 'Save Entry'; saveBtn.disabled = false; saveBtn.classList.remove('success'); }, 2000);
+                    await loadPastEntries();
+                } else {
+                    alert('Failed to save entry. Please try again.');
+                    saveBtn.textContent = 'Save Entry'; saveBtn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error saving entry. Check your connection.');
+                saveBtn.textContent = 'Save Entry'; saveBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

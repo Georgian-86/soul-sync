@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Psychologist Panel - Mind Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+    .sidebar {
+      position: fixed; left: 0; top: 0; width: 240px; height: 100vh;
+      background: linear-gradient(180deg, #0d4e2b 0%, #1a5c3a 50%, #1e6e43 100%);
+      color: white; padding: 24px 16px; display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-logo { font-size: 20px; font-weight: 700; margin-bottom: 40px; padding: 0 8px; display: flex; align-items: center; gap: 10px; }
+    .nav-links { list-style: none; flex: 1; }
+    .nav-links li { margin-bottom: 4px; }
+    .nav-links a {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      color: rgba(255,255,255,0.6); text-decoration: none; border-radius: 10px;
+      font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: white; background: rgba(255,255,255,0.1); }
+    .nav-links a.active { background: rgba(16,185,129,0.3); color: #a7f3d0; }
+    .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+    .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; }
+    .user-card { display: flex; align-items: center; gap: 10px; padding: 8px; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    .user-name { font-size: 13px; font-weight: 600; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.5); }
+    .logout-btn { display: block; width: 100%; padding: 10px; margin-top: 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: transparent; color: rgba(255,255,255,0.6); cursor: pointer; font-family: inherit; font-size: 13px; transition: all 0.2s; }
+    .logout-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+    .main { margin-left: 240px; padding: 24px 32px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .page-header h1 { font-size: 24px; font-weight: 700; }
+    .header-badge { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 16px; }
+    .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .stat-icon.patients { background: #dbeafe; }
+    .stat-icon.pending { background: #fef3c7; }
+    .stat-icon.confirmed { background: #d1fae5; }
+    .stat-icon.posts { background: #ede9fe; }
+    .stat-value { font-size: 24px; font-weight: 700; }
+    .stat-label { font-size: 12px; color: #888; margin-top: 2px; }
+
+    .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .card-header h3 { font-size: 16px; font-weight: 600; }
+    .card-header .badge { background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+
+    .appt-card { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: #f8f9ff; border-radius: 12px; margin-bottom: 10px; }
+    .appt-info { display: flex; align-items: center; gap: 12px; }
+    .appt-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; }
+    .appt-name { font-size: 14px; font-weight: 600; }
+    .appt-date { font-size: 12px; color: #888; }
+    .appt-notes { font-size: 11px; color: #666; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .appt-actions { display: flex; gap: 6px; }
+
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-confirmed { background: #d1fae5; color: #065f46; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+
+    .btn { padding: 6px 12px; border: none; border-radius: 6px; font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+    .btn-success { background: #d1fae5; color: #065f46; }
+    .btn-success:hover { background: #a7f3d0; }
+    .btn-danger { background: #fee2e2; color: #991b1b; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-primary { background: #1a5c3a; color: white; }
+    .btn-primary:hover { background: #0d4e2b; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 4px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 10px 12px; border: 2px solid #e8e8ee; border-radius: 8px;
+      font-family: inherit; font-size: 13px; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #10b981; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .patient-mood-card { padding: 14px; background: #f8f9ff; border-radius: 12px; margin-bottom: 10px; }
+    .patient-mood-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+    .chart-container { height: 200px; position: relative; }
+
+    .post-card { padding: 14px; background: #f8f9ff; border-radius: 12px; margin-bottom: 10px; }
+    .post-title { font-size: 14px; font-weight: 600; }
+    .post-meta { font-size: 11px; color: #888; margin-top: 2px; }
+    .post-preview { font-size: 12px; color: #555; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: #888; }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 10px; }
+    .empty-state p { font-size: 13px; }
+
+    .toast { position: fixed; top: 20px; right: 20px; padding: 14px 20px; border-radius: 10px; color: white; font-size: 13px; font-weight: 500; z-index: 1000; opacity: 0; transform: translateY(-10px); transition: all 0.3s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: #059669; }
+    .toast.error { background: #dc2626; }
+
+    @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .content-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .sidebar { width: 60px; padding: 16px 8px; } .sidebar-logo span:last-child, .nav-links a span:not(.nav-icon), .user-name, .user-role, .logout-btn { display: none; } .main { margin-left: 60px; padding: 16px; } }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo"><span>🩺</span><span>Psych Panel</span></div>
+    <ul class="nav-links">
+      <li><a href="#" class="active" data-tab="overview"><span class="nav-icon">📊</span><span>Overview</span></a></li>
+      <li><a href="#" data-tab="appointments"><span class="nav-icon">📅</span><span>Appointments</span></a></li>
+      <li><a href="#" data-tab="patients"><span class="nav-icon">👥</span><span>Patients</span></a></li>
+      <li><a href="#" data-tab="posts"><span class="nav-icon">📝</span><span>My Posts</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="avatarInitial">D</div>
+        <div><div class="user-name" id="sidebarName">Doctor</div><div class="user-role">Psychologist</div></div>
+      </div>
+      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <h1>Welcome, <span id="docName">...</span> 🩺</h1>
+        <p style="color:#888; font-size:13px;" id="docSpec"></p>
+      </div>
+      <span class="header-badge">🩺 Psychologist</span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon patients">👥</div>
+        <div><div class="stat-value" id="totalPatients">0</div><div class="stat-label">Total Patients</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon pending">⏳</div>
+        <div><div class="stat-value" id="pendingAppts">0</div><div class="stat-label">Pending Requests</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon confirmed">✅</div>
+        <div><div class="stat-value" id="confirmedAppts">0</div><div class="stat-label">Confirmed</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon posts">📝</div>
+        <div><div class="stat-value" id="totalPosts">0</div><div class="stat-label">Published Posts</div></div>
+      </div>
+    </div>
+
+    <!-- Overview -->
+    <div id="tab-overview" class="tab-panel active">
+      <div class="content-grid">
+        <div class="card">
+          <div class="card-header"><h3>Pending Appointments</h3><span class="badge" id="pendingBadge">0 pending</span></div>
+          <div id="pendingList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Recent Posts</h3></div>
+          <div id="recentPosts"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointments -->
+    <div id="tab-appointments" class="tab-panel" style="display:none;">
+      <div class="card">
+        <div class="card-header"><h3>All Appointments</h3></div>
+        <div id="allAppointments"></div>
+      </div>
+    </div>
+
+    <!-- Patients -->
+    <div id="tab-patients" class="tab-panel" style="display:none;">
+      <div class="card">
+        <div class="card-header"><h3>Patient Mood Overview</h3></div>
+        <div id="patientList"></div>
+      </div>
+    </div>
+
+    <!-- Posts -->
+    <div id="tab-posts" class="tab-panel" style="display:none;">
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header"><h3>Create New Post</h3></div>
+        <form id="postForm" onsubmit="createPost(event)">
+          <div class="form-row">
+            <div class="form-group"><label>Title</label><input type="text" id="postTitle" required placeholder="Post title..."></div>
+            <div class="form-group"><label>Category</label>
+              <select id="postCategory"><option value="mental-health">Mental Health</option><option value="wellness">Wellness</option><option value="tips">Tips & Advice</option><option value="research">Research</option></select>
+            </div>
+          </div>
+          <div class="form-group"><label>Content</label><textarea id="postContent" rows="5" required placeholder="Write your article..."></textarea></div>
+          <button type="submit" class="btn btn-primary" id="publishBtn" style="padding:10px 24px;">Publish Post</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>My Published Posts</h3></div>
+        <div id="myPosts"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = 'http://localhost:3000';
+    const userId = localStorage.getItem('currentUserId');
+    const userName = localStorage.getItem('userName');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!userId) { window.location.href = 'login-page.html'; }
+    if (userRole && userRole !== 'doctor') { window.location.href = userRole === 'admin' ? 'admin-panel.html' : 'patient-dashboard.html'; }
+
+    if (userName) {
+      document.getElementById('sidebarName').textContent = userName;
+      document.getElementById('avatarInitial').textContent = userName.charAt(0).toUpperCase();
+    }
+
+    let dashData = null;
+
+    // Tab switching
+    document.querySelectorAll('.nav-links a').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
+        a.classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+        document.getElementById('tab-' + a.dataset.tab).style.display = 'block';
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch(`${API}/api/doctor/dashboard/${userId}`);
+        if (!res.ok) throw new Error('Failed');
+        dashData = await res.json();
+        renderAll();
+      } catch (e) {
+        console.error('Dashboard load error:', e);
+        showToast('Failed to load dashboard', 'error');
+      }
+    }
+
+    function renderAll() {
+      const { doctor, stats, appointments, posts } = dashData;
+
+      // Header
+      document.getElementById('docName').textContent = doctor.name.startsWith('Dr.') ? doctor.name : 'Dr. ' + doctor.name;
+      document.getElementById('docSpec').textContent = (doctor.specialty || 'General Psychology') + ' · ' + (doctor.experience_years || 0) + ' years experience';
+      document.getElementById('sidebarName').textContent = doctor.name;
+      document.getElementById('avatarInitial').textContent = doctor.name.charAt(0).toUpperCase();
+
+      // Stats
+      document.getElementById('totalPatients').textContent = stats.totalPatients;
+      document.getElementById('pendingAppts').textContent = stats.pending;
+      document.getElementById('confirmedAppts').textContent = stats.confirmed;
+      document.getElementById('totalPosts').textContent = stats.totalPosts;
+      document.getElementById('pendingBadge').textContent = stats.pending + ' pending';
+
+      // Pending list
+      renderAppointmentList('pendingList', appointments.filter(a => a.status === 'pending'));
+      // All appointments
+      renderAppointmentList('allAppointments', appointments);
+      // Posts
+      renderPosts(posts);
+      // Patients
+      renderPatients(appointments);
+    }
+
+    function renderAppointmentList(containerId, appts) {
+      const container = document.getElementById(containerId);
+      if (!appts || appts.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><p>No appointments found</p></div>';
+        return;
+      }
+      container.innerHTML = appts.map(a => {
+        const patient = a.users || {};
+        const dateStr = a.appointment_date ? new Date(a.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD';
+        return `
+          <div class="appt-card">
+            <div class="appt-info">
+              <div class="appt-avatar">${(patient.name||'?').charAt(0).toUpperCase()}</div>
+              <div>
+                <div class="appt-name">${esc(patient.name || 'Unknown')}</div>
+                <div class="appt-date">📅 ${dateStr}</div>
+                ${a.notes ? `<div class="appt-notes">📝 ${esc(a.notes)}</div>` : ''}
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="status-badge status-${a.status}">${a.status}</span>
+              ${a.status === 'pending' ? `
+                <button class="btn btn-sm btn-success" onclick="updateAppt(${a.appointment_id},'confirmed')">Accept</button>
+                <button class="btn btn-sm btn-danger" onclick="updateAppt(${a.appointment_id},'cancelled')">Reject</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderPosts(posts) {
+      const recent = document.getElementById('recentPosts');
+      const myPosts = document.getElementById('myPosts');
+      if (!posts || posts.length === 0) {
+        const empty = '<div class="empty-state"><div class="empty-icon">📝</div><p>No posts yet. Create your first post!</p></div>';
+        recent.innerHTML = empty;
+        myPosts.innerHTML = empty;
+        return;
+      }
+      const html = posts.map(p => `
+        <div class="post-card">
+          <div class="post-title">${esc(p.title)}</div>
+          <div class="post-meta">${p.category || 'General'} · ${p.created_at ? new Date(p.created_at).toLocaleDateString() : ''}</div>
+          <div class="post-preview">${esc(p.content)}</div>
+        </div>
+      `).join('');
+      recent.innerHTML = posts.slice(0, 3).map(p => `
+        <div class="post-card">
+          <div class="post-title">${esc(p.title)}</div>
+          <div class="post-meta">${p.category || 'General'} · ${p.created_at ? new Date(p.created_at).toLocaleDateString() : ''}</div>
+        </div>
+      `).join('') || '<div class="empty-state"><p>No posts yet</p></div>';
+      myPosts.innerHTML = html;
+    }
+
+    function renderPatients(appointments) {
+      const container = document.getElementById('patientList');
+      const uniquePatients = {};
+      (appointments || []).forEach(a => {
+        if (a.users && a.users.user_id && !uniquePatients[a.users.user_id]) {
+          uniquePatients[a.users.user_id] = a.users;
+        }
+      });
+      const patients = Object.values(uniquePatients);
+      if (patients.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><p>No patients yet. Patients will appear here after booking appointments.</p></div>';
+        return;
+      }
+      container.innerHTML = patients.map(p => `
+        <div class="patient-mood-card">
+          <div class="patient-mood-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="appt-avatar">${(p.name||'?').charAt(0).toUpperCase()}</div>
+              <div>
+                <div style="font-size:14px;font-weight:600;">${esc(p.name)}</div>
+                <div style="font-size:12px;color:#888;">${p.age ? p.age + ' yrs' : ''} ${p.gender ? '· ' + p.gender : ''}</div>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-primary" onclick="viewPatientMoods(${p.user_id}, '${esc(p.name)}')">View Moods</button>
+          </div>
+          <div id="patient-moods-${p.user_id}" style="display:none; margin-top: 12px;">
+            <div class="chart-container"><canvas id="chart-${p.user_id}"></canvas></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function viewPatientMoods(patientId, name) {
+      const container = document.getElementById(`patient-moods-${patientId}`);
+      if (container.style.display === 'block') { container.style.display = 'none'; return; }
+      container.style.display = 'block';
+      try {
+        const res = await fetch(`${API}/api/doctor/patient/${patientId}/moods`);
+        const moods = await res.json();
+        const MOOD_SCORE = { joyful:5, happy:4, calm:3, neutral:2, stressed:-1, sad:-2, angry:-3, tired:-1 };
+        const last14 = {};
+        const today = new Date();
+        for (let i = 13; i >= 0; i--) {
+          const d = new Date(today); d.setDate(today.getDate() - i);
+          last14[d.toISOString().split('T')[0]] = [];
+        }
+        moods.forEach(m => { if (last14[m.log_date] !== undefined) last14[m.log_date].push(MOOD_SCORE[m.mood_type] || 0); });
+        const dates = Object.keys(last14).sort();
+        const scores = dates.map(d => last14[d].length > 0 ? parseFloat((last14[d].reduce((a,b)=>a+b,0)/last14[d].length).toFixed(1)) : null);
+        const ctx = document.getElementById(`chart-${patientId}`).getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: { labels: dates.map(d => new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})), datasets: [{ label: name + ' Mood', data: scores, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4, pointRadius: 3, spanGaps: true }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min:-4, max:6, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } } }
+        });
+      } catch (e) { container.innerHTML = '<p style="color:#888;font-size:12px;">Failed to load moods</p>'; }
+    }
+
+    async function updateAppt(apptId, status) {
+      try {
+        await fetch(`${API}/api/doctor/appointment/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ appointmentId: apptId, status }) });
+        showToast('Appointment ' + status + '!', 'success');
+        await loadDashboard();
+      } catch (e) { showToast('Action failed', 'error'); }
+    }
+
+    async function createPost(e) {
+      e.preventDefault();
+      const body = {
+        doctorId: parseInt(userId),
+        title: document.getElementById('postTitle').value,
+        content: document.getElementById('postContent').value,
+        category: document.getElementById('postCategory').value
+      };
+      try {
+        const res = await fetch(`${API}/api/doctor/post/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (res.ok) {
+          showToast('Post published!', 'success');
+          document.getElementById('postForm').reset();
+          await loadDashboard();
+        } else {
+          showToast('Failed to publish', 'error');
+        }
+      } catch (e) { showToast('Action failed', 'error'); }
+    }
+
+    function esc(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+
+    // Dark button UX for publish post form
+    const publishBtn = document.getElementById('publishBtn');
+    function updatePublishBtn() {
+      const title = document.getElementById('postTitle').value.trim();
+      const content = document.getElementById('postContent').value.trim();
+      if (title && content) {
+        publishBtn.style.background = '#0a2e1a'; publishBtn.style.color = 'white'; publishBtn.style.boxShadow = '0 4px 15px rgba(10,46,26,0.4)';
+      } else {
+        publishBtn.style.background = ''; publishBtn.style.color = ''; publishBtn.style.boxShadow = '';
+      }
+    }
+    document.getElementById('postTitle').addEventListener('input', updatePublishBtn);
+    document.getElementById('postContent').addEventListener('input', updatePublishBtn);
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = 'toast ' + type + ' show';
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function logout() { localStorage.clear(); window.location.href = 'login-page.html'; }
+  </script>
+</body>
+</html>

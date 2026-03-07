@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Mind Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .role-selection {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+        
+        .role-card {
+            flex: 1;
+            max-width: 150px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px var(--shadow-color);
+        }
+        
+        .role-card.selected {
+            border-color: var(--accent-blue);
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue));
+            color: white;
+        }
+        
+        .role-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .role-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .voice-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .voice-toggle:hover {
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="voice-toggle" id="voiceToggle">
+        <span id="voiceIcon">🔊</span>
+        <span id="voiceText">Voice On</span>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Welcome Back to Mind Tracker</h1>
+        </header>
+        <main>
+            <div id="roleSelection" class="role-selection">
+                <div class="role-card" data-role="patient">
+                    <div class="role-icon">👤</div>
+                    <div class="role-name">Patient</div>
+                </div>
+                <div class="role-card" data-role="doctor">
+                    <div class="role-icon">🩺</div>
+                    <div class="role-name">Doctor</div>
+                </div>
+                <div class="role-card" data-role="admin">
+                    <div class="role-icon">⚙️</div>
+                    <div class="role-name">Admin</div>
+                </div>
+            </div>
+
+            <form id="loginForm" class="profile-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" required placeholder="Enter your email">
+                </div>
+                <div id="responseMessage" style="text-align: center; margin: 10px 0; color: #e74c3c;"></div>
+                <button type="submit" class="btn">Log In</button>
+                <a href="index.html" style="display: block; text-align: center; margin-top: 15px; color: var(--primary-text);">
+                    Back to Home
+                </a>
+                <a href="signup.html" style="display: block; text-align: center; margin-top: 10px; color: var(--secondary-text);">
+                    Don't have an account? Sign up
+                </a>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        let selectedRole = 'patient';
+        let voiceEnabled = localStorage.getItem('voiceEnabled') !== 'false';
+        
+        // Voice instructions
+        const instructions = {
+            welcome: "Welcome to Mind Tracker. Please select your role: Patient, Doctor, or Admin.",
+            roleSelected: (role) => `You selected ${role}. Please enter your email to continue.`,
+            loginSuccess: (role) => `Login successful. Redirecting to ${role} dashboard.`,
+            loginError: "Login failed. Please check your email and try again."
+        };
+
+        function speak(text) {
+            if (!voiceEnabled) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 0.8;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Voice toggle
+        document.getElementById('voiceToggle').addEventListener('click', () => {
+            voiceEnabled = !voiceEnabled;
+            localStorage.setItem('voiceEnabled', voiceEnabled);
+            document.getElementById('voiceIcon').textContent = voiceEnabled ? '🔊' : '🔇';
+            document.getElementById('voiceText').textContent = voiceEnabled ? 'Voice On' : 'Voice Off';
+            speak(voiceEnabled ? "Voice instructions enabled" : "Voice instructions disabled");
+        });
+
+        // Set initial voice toggle state
+        document.getElementById('voiceIcon').textContent = voiceEnabled ? '🔊' : '🔇';
+        document.getElementById('voiceText').textContent = voiceEnabled ? 'Voice On' : 'Voice Off';
+
+        // Speak welcome message
+        setTimeout(() => speak(instructions.welcome), 500);
+
+        // Role selection
+        document.querySelectorAll('.role-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedRole = this.dataset.role;
+                speak(instructions.roleSelected(selectedRole));
+            });
+        });
+
+        // Default selection
+        document.querySelector('[data-role="patient"]').classList.add('selected');
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const responseMessage = document.getElementById('responseMessage');
+            responseMessage.textContent = '';
+
+            try {
+                const response = await fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, role: selectedRole })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.userId) {
+                    localStorage.setItem('currentUserId', data.userId);
+                    localStorage.setItem('userRole', data.role);
+                    localStorage.setItem('userData', JSON.stringify(data.user));
+                    
+                    speak(instructions.loginSuccess(selectedRole));
+                    
+                    // Redirect based on role
+                    setTimeout(() => {
+                        if (selectedRole === 'admin') {
+                            window.location.href = 'admin-dashboard.html';
+                        } else if (selectedRole === 'doctor') {
+                            window.location.href = 'doctor-dashboard.html';
+                        } else {
+                            window.location.href = 'questionnaire-info.html';
+                        }
+                    }, 1000);
+                } else {
+                    responseMessage.textContent = data.message || 'Login failed';
+                    speak(instructions.loginError);
+                }
+            } catch (error) {
+                console.error(error);
+                responseMessage.textContent = 'Server error. Please try again.';
+                speak(instructions.loginError);
+            }
+        });
+    </script>
+</body>
+</html>

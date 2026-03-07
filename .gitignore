@@ -1,0 +1,12 @@
+# Dependency directories
+node_modules/
+
+# Environment variables
+.env
+
+# Vercel
+.vercel
+
+# System files
+bash.exe.stackdump
+nul

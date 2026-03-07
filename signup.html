@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up - SoulSync</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Create Your SoulSync Account</h1>
+    </header>
+    <main>
+      <form id="signupForm" class="profile-form">
+        <div class="form-group">
+          <label for="name">Name</label><input value="demo@demo.com" type="text" id="name" />
+        </div>
+        <div class="form-group">
+          <label for="email">Email ID</label><input value="demo@demo.com" type="email" id="email" />
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone No</label><input value="1234" type="tel" id="phone" />
+        </div>
+        <div class="form-group">
+          <label for="age">Age</label><input value="23" type="number" id="age" />
+        </div>
+        <div class="form-group">
+          <label for="gender">Gender</label><select id="gender">
+            <option value="female" selected>Female</option>
+            <option value="male">Male</option>
+            <option value="non-binary">Non-binary</option>
+            <option value="prefer-not-to-say">Prefer not to say</option>
+          </select>
+        </div>
+        <button type="submit" class="btn">Create Account & Continue</button>
+      </form>
+    </main>
+  </div>
+  <script>
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const user = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        age: document.getElementById("age").value,
+        gender: document.getElementById("gender").value,
+        // Ensure this is set to false upon initial signup
+        questionnaireCompleted: false,
+      };
+
+      try {
+        const response = await fetch('http://localhost:3000/addUser', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user)
+        });
+
+        const data = await response.text(); // Get the string back
+        localStorage.setItem('currentUserId', JSON.parse(data).userId);
+      } catch (error) {
+        document.getElementById('responseMessage').innerText = "Error: Server not reached.";
+        console.error(error);
+      }
+
+      window.location.href = "questionnaire.html";
+    });
+  </script>
+</body>
+
+</html>

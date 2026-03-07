@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Mind Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue));
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .tab {
+            padding: 12px 25px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--secondary-text);
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .data-table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px var(--shadow-color);
+        }
+        
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th {
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue));
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 0 3px;
+            transition: all 0.2s;
+        }
+        
+        .btn-toggle {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .btn-view {
+            background: var(--accent-pink);
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        
+        .search-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 25px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="max-width: 1400px;">
+        <div class="admin-header">
+            <div>
+                <h1>Admin Dashboard</h1>
+                <p style="color: var(--secondary-text); margin: 5px 0;">Welcome, <span id="adminName">Admin</span></p>
+            </div>
+            <button onclick="logout()" class="btn" style="background: var(--secondary-text); width: auto;">
+                Logout
+            </button>
+        </div>
+
+        <div class="admin-stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Patients</div>
+                <div class="stat-number" id="totalPatients">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Doctors</div>
+                <div class="stat-number" id="totalDoctors">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Appointments</div>
+                <div class="stat-number" id="totalAppointments">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Today</div>
+                <div class="stat-number" id="activeToday">0</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('patients')">Patients</button>
+            <button class="tab" onclick="switchTab('doctors')">Doctors</button>
+            <button class="tab" onclick="switchTab('analytics')">Analytics</button>
+        </div>
+
+        <!-- Patients Tab -->
+        <div id="patients-tab" class="tab-content active">
+            <input type="text" class="search-box" id="patientSearch" placeholder="Search patients by name or email...">
+            
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Joined</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientsTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Doctors Tab -->
+        <div id="doctors-tab" class="tab-content">
+            <input type="text" class="search-box" id="doctorSearch" placeholder="Search doctors by name or specialty...">
+            
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Specialty</th>
+                            <th>Experience</th>
+                            <th>Rating</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctorsTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics-tab" class="tab-content">
+            <h3>System Analytics</h3>
+            <div class="admin-stats" style="margin-top: 20px;">
+                <div class="stat-card">
+                    <div class="stat-label">Journal Entries (30d)</div>
+                    <div class="stat-number">247</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Mood Logs (30d)</div>
+                    <div class="stat-number">1,853</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Art Creations (30d)</div>
+                    <div class="stat-number">89</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg. Session Time</div>
+                    <div class="stat-number">14m</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allPatients = [];
+        let allDoctors = [];
+
+        async function loadDashboard() {
+            try {
+                // Load patients
+                const patientsRes = await fetch('http://localhost:3000/admin/users');
+                allPatients = await patientsRes.json();
+                document.getElementById('totalPatients').textContent = allPatients.length;
+                renderPatients(allPatients);
+
+                // Load doctors
+                const doctorsRes = await fetch('http://localhost:3000/admin/doctors');
+                allDoctors = await doctorsRes.json();
+                document.getElementById('totalDoctors').textContent = allDoctors.filter(d => d.is_active).length;
+                renderDoctors(allDoctors);
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function renderPatients(patients) {
+            const tbody = document.getElementById('patientsTableBody');
+            if (patients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No patients found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = patients.map(patient => `
+                <tr>
+                    <td>${patient.name}</td>
+                    <td>${patient.email}</td>
+                    <td>${patient.age || 'N/A'}</td>
+                    <td>${patient.gender || 'N/A'}</td>
+                    <td>${new Date(patient.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <span class="status-badge ${patient.is_active ? 'status-active' : 'status-inactive'}">
+                            ${patient.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn btn-toggle" onclick="toggleUserStatus('${patient.user_id}', ${!patient.is_active})">
+                            ${patient.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button class="action-btn btn-view" onclick="viewPatientDetails('${patient.user_id}')">
+                            View
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderDoctors(doctors) {
+            const tbody = document.getElementById('doctorsTableBody');
+            if (doctors.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No doctors found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = doctors.map(doctor => `
+                <tr>
+                    <td>${doctor.name}</td>
+                    <td>${doctor.email}</td>
+                    <td>${doctor.specialty}</td>
+                    <td>${doctor.experience_years || 0} years</td>
+                    <td>⭐ ${doctor.rating || 0}</td>
+                    <td>
+                        <span class="status-badge ${doctor.is_active ? 'status-active' : 'status-inactive'}">
+                            ${doctor.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn btn-view" onclick="viewDoctorDetails('${doctor.doctor_id}')">
+                            View
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function toggleUserStatus(userId, newStatus) {
+            try {
+                const response = await fetch('http://localhost:3000/admin/toggleUserStatus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, isActive: newStatus })
+                });
+
+                if (response.ok) {
+                    alert(`User ${newStatus ? 'activated' : 'deactivated'} successfully!`);
+                    loadDashboard();
+                }
+            } catch (error) {
+                console.error('Error toggling user status:', error);
+                alert('Failed to update user status');
+            }
+        }
+
+        function viewPatientDetails(userId) {
+            alert('Patient details view - To be implemented');
+        }
+
+        function viewDoctorDetails(doctorId) {
+            alert('Doctor details view - To be implemented');
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        // Search functionality
+        document.getElementById('patientSearch').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allPatients.filter(p =>
+                p.name.toLowerCase().includes(searchTerm) ||
+                p.email.toLowerCase().includes(searchTerm)
+            );
+            renderPatients(filtered);
+        });
+
+        document.getElementById('doctorSearch').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allDoctors.filter(d =>
+                d.name.toLowerCase().includes(searchTerm) ||
+                d.specialty.toLowerCase().includes(searchTerm)
+            );
+            renderDoctors(filtered);
+        });
+
+        function logout() {
+            localStorage.removeItem('currentUserId');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userName');
+            window.location.href = 'login-page.html';
+        }
+
+        // Auth check
+        (function() {
+            const userId = localStorage.getItem('currentUserId');
+            const role = localStorage.getItem('userRole');
+            if (!userId) { window.location.href = 'login-page.html'; return; }
+            if (role && role !== 'admin') { window.location.href = role === 'doctor' ? 'doctor-panel.html' : 'patient-dashboard.html'; }
+            const name = localStorage.getItem('userName');
+            if (name) document.getElementById('adminName').textContent = name;
+        })();
+
+        // Load dashboard on page load
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>
