@@ -4,12 +4,44 @@
     {
       "src": "server-app.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "**/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.js",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "/server-app.js"
+    },
+    {
+      "src": "/(addUser|login|addMood|addJournalEntry|saveArt|bookAppointment|updateUser)",
+      "dest": "/server-app.js"
+    },
+    {
+      "src": "/get(.*)",
+      "dest": "/server-app.js"
+    },
+    {
+      "src": "/analyzeMood/(.*)",
+      "dest": "/server-app.js"
+    },
+    {
+      "src": "/(.*\\.(html|css|js|json|png|jpg|jpeg|gif|svg|ico))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/$",
+      "dest": "/index.html"
     }
   ]
 }
