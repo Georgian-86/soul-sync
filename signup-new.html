@@ -55,25 +55,25 @@
     </div>
     <form id="signupForm" onsubmit="handleSignup(event)">
       <div class="form-group">
-        <label for="name">Full Name</label>
+        <label for="name">Full Name <span style="color:#e74c3c">*</span></label>
         <input type="text" id="name" placeholder="Enter your full name" required>
       </div>
       <div class="form-group">
-        <label for="email">Email Address</label>
+        <label for="email">Email Address <span style="color:#e74c3c">*</span></label>
         <input type="email" id="email" placeholder="Enter your email" required>
       </div>
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password">Password <span style="color:#e74c3c">*</span></label>
         <input type="password" id="password" placeholder="Create a password" required minlength="6">
       </div>
       <div class="row">
         <div class="form-group">
-          <label for="age">Age</label>
-          <input type="number" id="age" placeholder="Age" min="10" max="120">
+          <label for="age">Age <span style="color:#e74c3c">*</span></label>
+          <input type="number" id="age" placeholder="Age" min="10" max="120" required>
         </div>
         <div class="form-group">
-          <label for="gender">Gender</label>
-          <select id="gender">
+          <label for="gender">Gender <span style="color:#e74c3c">*</span></label>
+          <select id="gender" required>
             <option value="">Select</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
@@ -83,8 +83,8 @@
         </div>
       </div>
       <div class="form-group">
-        <label for="phone">Phone (optional)</label>
-        <input type="tel" id="phone" placeholder="Phone number">
+        <label for="phone">Phone <span style="color:#e74c3c">*</span></label>
+        <input type="tel" id="phone" placeholder="Phone number" required>
       </div>
       <button type="submit" class="signup-btn" id="signupBtn">Create Account</button>
     </form>
