@@ -4,7 +4,7 @@
   "description": "Mental health tracking application",
   "main": "server-app.js",
   "engines": {
-    "node": ">=18.x"
+    "node": "20.x"
   },
   "dependencies": {
     "@google/generative-ai": "^0.2.1",
