@@ -1,4 +1,8 @@
-require("dotenv").config();
+// Load environment variables (only needed for local dev - Vercel injects them directly)
+if (process.env.NODE_ENV !== 'production') {
+  require("dotenv").config();
+}
+
 const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");

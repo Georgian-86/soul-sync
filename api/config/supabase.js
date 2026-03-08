@@ -1,5 +1,10 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+
+// In Vercel, env vars are injected directly - dotenv not needed
+// Only use dotenv for local development
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Use SERVICE_ROLE_KEY for backend
