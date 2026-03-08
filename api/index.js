@@ -44,8 +44,10 @@ function requireAuth(allowedRoles = []) {
 // ===================== AUTHENTICATION =====================
 
 // Login with password + role
-app.post("/api/login", async (req, res) => {
+app.post("/login", async (req, res) => {
   const { email, password, role } = req.body;
+  console.log('🔐 Login attempt:', { email, role, hasPassword: !!password });
+  
   if (!email || !password || !role) {
     return res.status(400).json({ message: "Email, password, and role are required." });
   }
@@ -63,20 +65,24 @@ app.post("/api/login", async (req, res) => {
       .single();
 
     if (error || !data) {
+      console.log('❌ Login failed: User not found', { email, role, error });
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
     // Check password if the column exists and has a value
     if (data.password && data.password !== password) {
+      console.log('❌ Login failed: Wrong password', { email, role });
       return res.status(401).json({ message: "Invalid email or password." });
     }
     if (data.is_active === false) {
+      console.log('❌ Login failed: Account deactivated', { email, role });
       return res.status(403).json({ message: "Account is deactivated. Contact admin." });
     }
 
     const userId = data[idMap[role]];
     const token = createSession(userId, role);
 
+    console.log('✅ Login successful:', { email, role, userId });
     res.json({
       message: "Login successful",
       token,
@@ -85,51 +91,13 @@ app.post("/api/login", async (req, res) => {
       user: { name: data.name, email: data.email }
     });
   } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// Legacy login (backwards compat for old pages)
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    // Check all tables
-    for (const [role, table, idCol] of [
-      ["admin", "admins", "admin_id"],
-      ["doctor", "doctors", "doctor_id"],
-      ["patient", "users", "user_id"],
-    ]) {
-      const { data } = await supabase.from(table).select("*").eq("email", email).single();
-      if (data) {
-        // Check password if provided
-        if (password && data.password && data.password !== password) {
-          continue; // Wrong password, try next table
-        }
-        // Check if account is active
-        if (data.is_active === false) {
-          return res.status(403).json({ message: "Account is deactivated. Contact admin." });
-        }
-        const token = createSession(data[idCol], role);
-        return res.json({
-          message: "User found",
-          token,
-          userId: data[idCol],
-          role,
-          user: data,
-          questionnaireCompleted: data.questionnaire_completed || false
-        });
-      }
-    }
-    res.status(404).json({ message: "User not found. Please check your email or sign up." });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Database error" });
+    console.error("💥 Login error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
 // Signup
-app.post("/api/signup", async (req, res) => {
+app.post("/signup", async (req, res) => {
   const { name, email, password, age, gender, phone } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ message: "Name, email and password required." });
@@ -175,7 +143,7 @@ app.post("/addUser", async (req, res) => {
 });
 
 // Verify session
-app.get("/api/verify", (req, res) => {
+app.get("/verify", (req, res) => {
   const token = req.headers["x-auth-token"];
   if (!token || !sessions.has(token)) return res.status(401).json({ valid: false });
   const session = sessions.get(token);
@@ -183,7 +151,7 @@ app.get("/api/verify", (req, res) => {
 });
 
 // Logout
-app.post("/api/logout", (req, res) => {
+app.post("/logout", (req, res) => {
   const token = req.headers["x-auth-token"];
   if (token) sessions.delete(token);
   res.json({ message: "Logged out" });
@@ -446,7 +414,7 @@ app.get("/getDoctorPosts", async (req, res) => {
 
 // ===================== DOCTOR ENDPOINTS (Protected) =====================
 
-app.get("/api/doctor/dashboard/:id", async (req, res) => {
+app.get("/doctor/dashboard/:id", async (req, res) => {
   try {
     const doctorId = req.params.id;
     
@@ -484,7 +452,7 @@ app.get("/api/doctor/dashboard/:id", async (req, res) => {
   }
 });
 
-app.post("/api/doctor/appointment/update", async (req, res) => {
+app.post("/doctor/appointment/update", async (req, res) => {
   const { appointmentId, status } = req.body;
   try {
     const { error } = await supabase
@@ -496,7 +464,7 @@ app.post("/api/doctor/appointment/update", async (req, res) => {
   }
 });
 
-app.post("/api/doctor/post/create", async (req, res) => {
+app.post("/doctor/post/create", async (req, res) => {
   const { doctorId, title, content, category } = req.body;
   try {
     const { data, error } = await supabase
@@ -510,7 +478,7 @@ app.post("/api/doctor/post/create", async (req, res) => {
   }
 });
 
-app.get("/api/doctor/patient/:patientId/moods", async (req, res) => {
+app.get("/doctor/patient/:patientId/moods", async (req, res) => {
   try {
     const { data } = await supabase
       .from("mood_logs").select("*")
@@ -524,7 +492,7 @@ app.get("/api/doctor/patient/:patientId/moods", async (req, res) => {
 
 // ===================== ADMIN ENDPOINTS (Protected) =====================
 
-app.get("/api/admin/dashboard", async (req, res) => {
+app.get("/admin/dashboard", async (req, res) => {
   try {
     const { data: users } = await supabase.from("users").select("*").order("created_at", { ascending: false });
     const { data: doctors } = await supabase.from("doctors").select("*").order("created_at", { ascending: false });
@@ -585,7 +553,7 @@ app.post("/admin/toggleUserStatus", async (req, res) => {
   }
 });
 
-app.post("/api/admin/toggleDoctorStatus", async (req, res) => {
+app.post("/admin/toggleDoctorStatus", async (req, res) => {
   const { doctorId, isActive } = req.body;
   try {
     await supabase.from("doctors").update({ is_active: isActive }).eq("doctor_id", doctorId);
@@ -595,7 +563,7 @@ app.post("/api/admin/toggleDoctorStatus", async (req, res) => {
   }
 });
 
-app.post("/api/admin/addDoctor", async (req, res) => {
+app.post("/admin/addDoctor", async (req, res) => {
   const { name, email, password, specialty, bio, experience_years } = req.body;
   try {
     const { data, error } = await supabase
@@ -609,7 +577,7 @@ app.post("/api/admin/addDoctor", async (req, res) => {
   }
 });
 
-app.delete("/api/admin/deleteUser/:id", async (req, res) => {
+app.delete("/admin/deleteUser/:id", async (req, res) => {
   try {
     await supabase.from("users").delete().eq("user_id", req.params.id);
     res.json({ message: "User deleted" });
@@ -619,7 +587,7 @@ app.delete("/api/admin/deleteUser/:id", async (req, res) => {
 });
 
 // Questionnaire: Save answers and analyze with AI
-app.post("/api/questionnaire/submit", async (req, res) => {
+app.post("/questionnaire/submit", async (req, res) => {
   const { userId, answers } = req.body;
   if (!userId || !answers) return res.status(400).json({ message: "Missing data" });
   try {
