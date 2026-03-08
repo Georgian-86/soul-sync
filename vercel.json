@@ -1,5 +1,13 @@
 {
   "version": 2,
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api" },
+    { "source": "/admin/:path*", "destination": "/api" },
+    { "source": "/ai/:path*", "destination": "/api" },
+    { "source": "/test/:path*", "destination": "/api" },
+    { "source": "/(getDoctors|getAppointments|bookAppointment|addUser|addMood|addJournalEntry|saveArt|updateUser|updateProfilePicture|getUserDetails|getUserMoods|getMoodHistory|getJournalEntries|getDoctorDetails|analyzeMood|getDoctorPosts|updateSettings|getSettings|getUserArt)/:path*", "destination": "/api" },
+    { "source": "/(getDoctors|getAppointments|bookAppointment|addUser|addMood|addJournalEntry|saveArt|updateUser|updateProfilePicture|getUserDetails|getUserMoods|getMoodHistory|getJournalEntries|getDoctorDetails|analyzeMood|getDoctorPosts|updateSettings|getSettings|getUserArt)", "destination": "/api" }
+  ],
   "functions": {
     "api/index.js": {
       "maxDuration": 30,

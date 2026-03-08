@@ -44,7 +44,7 @@ function requireAuth(allowedRoles = []) {
 // ===================== AUTHENTICATION =====================
 
 // Login with password + role
-app.post("/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
   const { email, password, role } = req.body;
   console.log('🔐 Login attempt:', { email, role, hasPassword: !!password });
   
@@ -97,7 +97,7 @@ app.post("/login", async (req, res) => {
 });
 
 // Signup
-app.post("/signup", async (req, res) => {
+app.post("/api/signup", async (req, res) => {
   const { name, email, password, age, gender, phone } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ message: "Name, email and password required." });
@@ -143,7 +143,7 @@ app.post("/addUser", async (req, res) => {
 });
 
 // Verify session
-app.get("/verify", (req, res) => {
+app.get("/api/verify", (req, res) => {
   const token = req.headers["x-auth-token"];
   if (!token || !sessions.has(token)) return res.status(401).json({ valid: false });
   const session = sessions.get(token);
@@ -151,7 +151,7 @@ app.get("/verify", (req, res) => {
 });
 
 // Logout
-app.post("/logout", (req, res) => {
+app.post("/api/logout", (req, res) => {
   const token = req.headers["x-auth-token"];
   if (token) sessions.delete(token);
   res.json({ message: "Logged out" });
@@ -414,7 +414,7 @@ app.get("/getDoctorPosts", async (req, res) => {
 
 // ===================== DOCTOR ENDPOINTS (Protected) =====================
 
-app.get("/doctor/dashboard/:id", async (req, res) => {
+app.get("/api/doctor/dashboard/:id", async (req, res) => {
   try {
     const doctorId = req.params.id;
     
@@ -452,7 +452,7 @@ app.get("/doctor/dashboard/:id", async (req, res) => {
   }
 });
 
-app.post("/doctor/appointment/update", async (req, res) => {
+app.post("/api/doctor/appointment/update", async (req, res) => {
   const { appointmentId, status } = req.body;
   try {
     const { error } = await supabase
@@ -464,7 +464,7 @@ app.post("/doctor/appointment/update", async (req, res) => {
   }
 });
 
-app.post("/doctor/post/create", async (req, res) => {
+app.post("/api/doctor/post/create", async (req, res) => {
   const { doctorId, title, content, category } = req.body;
   try {
     const { data, error } = await supabase
@@ -478,7 +478,7 @@ app.post("/doctor/post/create", async (req, res) => {
   }
 });
 
-app.get("/doctor/patient/:patientId/moods", async (req, res) => {
+app.get("/api/doctor/patient/:patientId/moods", async (req, res) => {
   try {
     const { data } = await supabase
       .from("mood_logs").select("*")
@@ -492,7 +492,7 @@ app.get("/doctor/patient/:patientId/moods", async (req, res) => {
 
 // ===================== ADMIN ENDPOINTS (Protected) =====================
 
-app.get("/admin/dashboard", async (req, res) => {
+app.get("/api/admin/dashboard", async (req, res) => {
   try {
     const { data: users } = await supabase.from("users").select("*").order("created_at", { ascending: false });
     const { data: doctors } = await supabase.from("doctors").select("*").order("created_at", { ascending: false });
@@ -553,7 +553,7 @@ app.post("/admin/toggleUserStatus", async (req, res) => {
   }
 });
 
-app.post("/admin/toggleDoctorStatus", async (req, res) => {
+app.post("/api/admin/toggleDoctorStatus", async (req, res) => {
   const { doctorId, isActive } = req.body;
   try {
     await supabase.from("doctors").update({ is_active: isActive }).eq("doctor_id", doctorId);
@@ -563,7 +563,7 @@ app.post("/admin/toggleDoctorStatus", async (req, res) => {
   }
 });
 
-app.post("/admin/addDoctor", async (req, res) => {
+app.post("/api/admin/addDoctor", async (req, res) => {
   const { name, email, password, specialty, bio, experience_years } = req.body;
   try {
     const { data, error } = await supabase
@@ -577,7 +577,7 @@ app.post("/admin/addDoctor", async (req, res) => {
   }
 });
 
-app.delete("/admin/deleteUser/:id", async (req, res) => {
+app.delete("/api/admin/deleteUser/:id", async (req, res) => {
   try {
     await supabase.from("users").delete().eq("user_id", req.params.id);
     res.json({ message: "User deleted" });
@@ -587,7 +587,7 @@ app.delete("/admin/deleteUser/:id", async (req, res) => {
 });
 
 // Questionnaire: Save answers and analyze with AI
-app.post("/questionnaire/submit", async (req, res) => {
+app.post("/api/questionnaire/submit", async (req, res) => {
   const { userId, answers } = req.body;
   if (!userId || !answers) return res.status(400).json({ message: "Missing data" });
   try {
