@@ -878,7 +878,7 @@
     </div>
 
     <script>
-        const API = 'http://localhost:3000';
+        const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
         const totalQuestions = 15;
         let currentQuestion = 1;
         const progressBar = document.getElementById('progressBar');
@@ -1031,7 +1031,26 @@
         (function init() {
             const user = localStorage.getItem('currentUserId');
             const userName = localStorage.getItem('userName');
-            if (!user) { alert("Please log in first."); window.location.href = 'login-page.html'; return; }
+            if (!user) { alert("Please log in first."); window.location.href = 'login.html'; return; }
+            
+            // Check if this is first login (mandatory assessment)
+            const urlParams = new URLSearchParams(window.location.search);
+            const isFirstLogin = urlParams.get('firstLogin') === 'true';
+            
+            if (isFirstLogin) {
+                // Hide sidebar for first login to prevent navigation
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) sidebar.style.display = 'none';
+                
+                // Show mandatory message
+                const container = document.querySelector('.container');
+                if (container) {
+                    const notice = document.createElement('div');
+                    notice.style.cssText = 'background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; font-size: 14px; box-shadow: 0 4px 15px rgba(102,126,234,0.3);';
+                    notice.innerHTML = '<strong>🎯 Welcome to SoulSync!</strong><br>Please complete this assessment to personalize your experience. This is required to access your dashboard.';
+                    container.insertBefore(notice, container.firstChild);
+                }
+            }
             
             // Initialize sidebar
             if (userName) {

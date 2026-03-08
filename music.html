@@ -149,7 +149,24 @@
         // Auth Check & Sidebar
         const userId = localStorage.getItem('currentUserId');
         const userName = localStorage.getItem('userName');
-        if (!userId) { window.location.href = 'login-page.html'; }
+        const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
+        
+        if (!userId) { window.location.href = 'login.html'; }
+        
+        // Check if assessment is completed
+        async function checkAssessment() {
+            try {
+                const res = await fetch(`${API}/getUserDetails/${userId}`);
+                if (res.ok) {
+                    const user = await res.json();
+                    if (user.questionnaire_completed === false) {
+                        window.location.href = 'questionnaire.html?firstLogin=true';
+                        return;
+                    }
+                }
+            } catch (e) { console.error('Assessment check:', e); }
+        }
+        checkAssessment();
         
         if (userName) {
             document.getElementById('sidebarName').textContent = userName;

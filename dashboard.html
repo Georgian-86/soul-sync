@@ -120,6 +120,12 @@
 
                 const user = JSON.parse(await response.text());
                 if (Object.keys(user).length > 0) {
+                    // Check if assessment is completed - if not, redirect to mandatory assessment
+                    if (user.questionnaire_completed === false) {
+                        window.location.href = 'questionnaire.html?firstLogin=true';
+                        return;
+                    }
+                    
                     document.getElementById('userName').textContent = user.name;
                     document.getElementById('user-info').innerHTML = `Logged in as: <a href="profile.html">${user.name}</a>`;
                 } else {

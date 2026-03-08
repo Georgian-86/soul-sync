@@ -15,8 +15,15 @@
         </header>
         <main>
             <form id="loginForm" class="profile-form">
-                <div class="form-group"><label for="email">Enter Your Email ID</label><input value="demo@demo.com"
-                        type="email" id="email" required><span id="responseMessage"></span> </div>
+                <div class="form-group">
+                    <label for="email">Enter Your Email ID</label>
+                    <input value="demo@demo.com" type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Enter Your Password</label>
+                    <input value="demo123" type="password" id="password" required>
+                </div>
+                <span id="responseMessage"></span>
                 <button type="submit" class="btn">Log In</button>
                 <a href="index.html"
                     style="display: block; text-align: center; margin-top: 15px; color: var(--primary-text);">Back
@@ -28,7 +35,10 @@
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const body = { email: document.getElementById('email').value };
+            const body = { 
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value 
+            };
 
             try {
                 const response = await fetch('http://localhost:3000/login', {
@@ -41,14 +51,20 @@
                 if (data.message === "User found") {
                     localStorage.setItem('currentUserId', data.userId);
                     localStorage.setItem('userRole', data.role);
+                    localStorage.setItem('authToken', data.token);
                     
                     // Redirect based on role
                     if (data.role === 'admin') {
                         window.location.href = 'admin-dashboard.html';
                     } else if (data.role === 'doctor') {
-                        window.location.href = 'doctor-dashboard.html';
+                        window.location.href = 'doctor-panel.html';
                     } else {
-                        window.location.href = 'dashboard.html';
+                        // For patients, check if questionnaire is completed
+                        if (data.questionnaireCompleted === false) {
+                            window.location.href = 'questionnaire.html?firstLogin=true';
+                        } else {
+                            window.location.href = 'patient-dashboard.html';
+                        }
                     }
                 } else {
                     document.getElementById('responseMessage').innerText = data.message;

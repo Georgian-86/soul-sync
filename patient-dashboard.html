@@ -268,6 +268,36 @@
           <div class="card-header"><h3>Available Psychologists</h3></div>
           <div id="doctorList"><p style="color:#888; font-size:13px;">Loading...</p></div>
         </div>
+        <div class="card" style="margin-top: 16px;">
+          <div class="card-header"><h3>My Appointments</h3></div>
+          <div id="appointmentsList"><p style="color:#888; font-size:13px;">Loading...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointment Booking Modal -->
+    <div id="appointmentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+      <div style="background: white; border-radius: 16px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+        <h3 style="margin-bottom: 20px; color: #1a1a2e;">Book Appointment</h3>
+        <form id="appointmentForm">
+          <input type="hidden" id="selectedDoctorId">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Doctor</label>
+            <div id="selectedDoctorName" style="padding: 12px; background: #f0f2f5; border-radius: 8px; color: #1a1a2e;"></div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label for="appointmentDate" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Appointment Date & Time</label>
+            <input type="datetime-local" id="appointmentDate" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;">
+          </div>
+          <div style="margin-bottom: 20px;">
+            <label for="appointmentNotes" style="display: block; margin-bottom: 8px; font-weight: 500; color: #333;">Notes (Optional)</label>
+            <textarea id="appointmentNotes" rows="3" placeholder="Any specific concerns or topics you'd like to discuss..." style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="button" onclick="closeAppointmentModal()" style="flex: 1; padding: 12px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer; font-weight: 500;">Cancel</button>
+            <button type="submit" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">Book Appointment</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -289,13 +319,13 @@
       document.querySelector('.main').classList.add('expanded');
       document.getElementById('sidebarToggle').textContent = '▶';
     }
-    const API = '';
+    const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
     const userId = localStorage.getItem('currentUserId');
     const userName = localStorage.getItem('userName');
     const userRole = localStorage.getItem('userRole');
 
     // RBAC: Redirect if not patient
-    if (!userId) { window.location.href = 'login-page.html'; }
+    if (!userId) { window.location.href = 'login.html'; }
     if (userRole && userRole !== 'patient') { window.location.href = userRole === 'admin' ? 'admin-panel.html' : 'doctor-panel.html'; }
 
     const MOODS = { joyful:'🥳', happy:'😊', calm:'🧘', neutral:'😐', stressed:'🤯', sad:'😔', angry:'😡', tired:'😴' };
@@ -320,6 +350,7 @@
       await loadMoodHistory();
       await loadJournalCount();
       await loadDoctors();
+      await loadAppointments();
       renderCalendar();
     });
 
@@ -328,6 +359,13 @@
         const res = await fetch(`${API}/getUserDetails/${userId}`);
         if (res.ok) {
           const user = await res.json();
+          
+          // Check if questionnaire is completed - if not, redirect to mandatory assessment
+          if (user.questionnaire_completed === false) {
+            window.location.href = 'questionnaire.html?firstLogin=true';
+            return;
+          }
+          
           document.getElementById('greeting').textContent = user.name;
           document.getElementById('sidebarName').textContent = user.name;
           document.getElementById('avatarInitial').textContent = user.name.charAt(0).toUpperCase();
@@ -399,17 +437,94 @@
           return;
         }
         container.innerHTML = docs.slice(0, 3).map(d => `
-          <div class="doctor-card">
-            <div class="doc-avatar">🩺</div>
-            <div>
-              <div class="doc-name">${d.name}</div>
-              <div class="doc-spec">${d.specialty || 'General'}</div>
-              <div class="doc-rating">⭐ ${d.rating || 'N/A'} · ${d.experience_years || 0} yrs exp</div>
+          <div class="doctor-card" style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px;">
+            <div class="doc-avatar" style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">🩺</div>
+            <div style="flex: 1;">
+              <div class="doc-name" style="font-weight: 600; color: #1a1a2e; margin-bottom: 2px;">${esc(d.name)}</div>
+              <div class="doc-spec" style="font-size: 12px; color: #666; margin-bottom: 2px;">${esc(d.specialty || 'General')}</div>
+              <div class="doc-rating" style="font-size: 11px; color: #888;">⭐ ${d.rating || 'N/A'} · ${d.experience_years || 0} yrs exp</div>
             </div>
+            <button onclick="openAppointmentModal('${d.doctor_id}', '${esc(d.name)}')" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap;">Book</button>
           </div>
         `).join('');
       } catch (e) { console.error('loadDoctors:', e); }
     }
+
+    async function loadAppointments() {
+      try {
+        const res = await fetch(`${API}/getAppointments/${userId}`);
+        const appts = await res.json();
+        const container = document.getElementById('appointmentsList');
+        if (!appts || appts.length === 0) {
+          container.innerHTML = '<p style="color:#888;font-size:13px;">No appointments booked yet.</p>';
+          return;
+        }
+        container.innerHTML = appts.map(a => {
+          const doctor = a.doctors || {};
+          const date = new Date(a.appointment_date);
+          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          const statusColor = a.status === 'confirmed' ? '#10b981' : a.status === 'pending' ? '#f59e0b' : '#ef4444';
+          return `
+            <div style="padding: 12px; border-left: 3px solid ${statusColor}; background: #f9fafb; border-radius: 8px; margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+                <div style="font-weight: 600; color: #1a1a2e;">${esc(doctor.name || 'Doctor')}</div>
+                <span style="padding: 2px 8px; background: ${statusColor}; color: white; border-radius: 12px; font-size: 10px; text-transform: uppercase;">${a.status}</span>
+              </div>
+              <div style="font-size: 12px; color: #666; margin-bottom: 4px;">📅 ${dateStr} at ${timeStr}</div>
+              ${a.notes ? `<div style="font-size: 11px; color: #888; margin-top: 4px;">📝 ${esc(a.notes)}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+      } catch (e) { 
+        console.error('loadAppointments:', e);
+        document.getElementById('appointmentsList').innerHTML = '<p style="color:#888;font-size:13px;">Failed to load appointments.</p>';
+      }
+    }
+
+    function openAppointmentModal(doctorId, doctorName) {
+      document.getElementById('selectedDoctorId').value = doctorId;
+      document.getElementById('selectedDoctorName').textContent = doctorName;
+      document.getElementById('appointmentModal').style.display = 'flex';
+      // Set minimum date to today
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('appointmentDate').min = now.toISOString().slice(0, 16);
+    }
+
+    function closeAppointmentModal() {
+      document.getElementById('appointmentModal').style.display = 'none';
+      document.getElementById('appointmentForm').reset();
+    }
+
+    document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const doctorId = document.getElementById('selectedDoctorId').value;
+      const appointmentDate = document.getElementById('appointmentDate').value;
+      const notes = document.getElementById('appointmentNotes').value;
+
+      try {
+        const res = await fetch(`${API}/bookAppointment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, doctorId, appointmentDate, notes })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          alert('✅ Appointment booked successfully! The doctor will review and confirm.');
+          closeAppointmentModal();
+          await loadAppointments();
+        } else {
+          alert('❌ Failed to book appointment: ' + data.message);
+        }
+      } catch (err) {
+        console.error('Booking error:', err);
+        alert('❌ Failed to book appointment. Please try again.');
+      }
+    });
+
+    function esc(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
 
     // Render Hour Grid
     function renderHourGrid() {

@@ -249,10 +249,26 @@
     </div>
 
     <script>
-        const API = '';
+        const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
         const userId = localStorage.getItem('currentUserId');
         const userName = localStorage.getItem('userName');
-        if (!userId) { window.location.href = 'login-page.html'; }
+        
+        if (!userId) { window.location.href = 'login.html'; }
+        
+        // Check if assessment is completed
+        async function checkAssessment() {
+            try {
+                const res = await fetch(`${API}/getUserDetails/${userId}`);
+                if (res.ok) {
+                    const user = await res.json();
+                    if (user.questionnaire_completed === false) {
+                        window.location.href = 'questionnaire.html?firstLogin=true';
+                        return;
+                    }
+                }
+            } catch (e) { console.error('Assessment check:', e); }
+        }
+        checkAssessment();
         
         // Update sidebar user info
         if (userName) {

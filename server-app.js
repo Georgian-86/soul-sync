@@ -87,7 +87,7 @@ app.post("/api/login", async (req, res) => {
 
 // Legacy login (backwards compat for old pages)
 app.post("/login", async (req, res) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
   try {
     // Check all tables
     for (const [role, table, idCol] of [
@@ -97,13 +97,22 @@ app.post("/login", async (req, res) => {
     ]) {
       const { data } = await supabase.from(table).select("*").eq("email", email).single();
       if (data) {
+        // Check password if provided
+        if (password && data.password && data.password !== password) {
+          continue; // Wrong password, try next table
+        }
+        // Check if account is active
+        if (data.is_active === false) {
+          return res.status(403).json({ message: "Account is deactivated. Contact admin." });
+        }
         const token = createSession(data[idCol], role);
         return res.json({
           message: "User found",
           token,
           userId: data[idCol],
           role,
-          user: data
+          user: data,
+          questionnaireCompleted: data.questionnaire_completed || false
         });
       }
     }
@@ -357,28 +366,44 @@ app.get("/getDoctorDetails/:id", async (req, res) => {
 // Appointments
 app.post("/bookAppointment", async (req, res) => {
   const { userId, doctorId, appointmentDate, notes } = req.body;
+  
   try {
     const { data, error } = await supabase
       .from("appointments")
       .insert([{ user_id: userId, doctor_id: doctorId, appointment_date: appointmentDate, notes, status: "pending" }])
       .select().single();
-    if (error) return res.status(500).json({ message: "Database error" });
+    
+    if (error) {
+      console.error('Failed to book appointment:', error);
+      return res.status(500).json({ message: "Database error", error: error.message });
+    }
+    
     res.json({ message: "Appointment booked!", appointmentId: data.appointment_id });
   } catch (err) {
+    console.error('Booking appointment error:', err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 app.get("/getAppointments/:id", async (req, res) => {
   try {
+    const userId = req.params.id;
+    console.log('>>> BACKEND: Loading appointments for PATIENT ID:', userId);
+    
     const { data, error } = await supabase
       .from("appointments")
       .select("*, doctors(name, specialty, profile_image)")
-      .eq("user_id", req.params.id)
+      .eq("user_id", userId)
       .order("appointment_date", { ascending: true });
-    if (error) return res.status(500).json({ error: "Database error" });
+    
+    if (error) {
+      console.error('Error fetching appointments:', error);
+      return res.status(500).json({ error: "Database error" });
+    }
+    
     res.json(data || []);
   } catch (err) {
+    console.error('Get appointments error:', err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -419,9 +444,12 @@ app.get("/getDoctorPosts", async (req, res) => {
 app.get("/api/doctor/dashboard/:id", async (req, res) => {
   try {
     const doctorId = req.params.id;
+    
     const { data: doctor } = await supabase
       .from("doctors").select("*").eq("doctor_id", doctorId).single();
-    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
 
     const { data: appointments } = await supabase
       .from("appointments")
@@ -446,7 +474,7 @@ app.get("/api/doctor/dashboard/:id", async (req, res) => {
       posts: posts || []
     });
   } catch (err) {
-    console.error(err);
+    console.error('Doctor dashboard error:', err);
     res.status(500).json({ error: "Server error" });
   }
 });

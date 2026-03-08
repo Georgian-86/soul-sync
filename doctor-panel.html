@@ -162,7 +162,12 @@
         <h1>Welcome, <span id="docName">...</span> 🩺</h1>
         <p style="color:#888; font-size:13px;" id="docSpec"></p>
       </div>
-      <span class="header-badge">🩺 Psychologist</span>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button onclick="loadDashboard()" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px;" title="Refresh dashboard data">
+          <span>🔄</span> Refresh
+        </button>
+        <span class="header-badge">🩺 Psychologist</span>
+      </div>
     </div>
 
     <div class="stats-grid">
@@ -255,7 +260,7 @@
       document.querySelector('.main').classList.add('expanded');
       document.getElementById('sidebarToggle').textContent = '▶';
     }
-    const API = '';
+    const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
     const userId = localStorage.getItem('currentUserId');
     const userName = localStorage.getItem('userName');
     const userRole = localStorage.getItem('userRole');
@@ -286,16 +291,25 @@
     async function loadDashboard() {
       try {
         const res = await fetch(`${API}/api/doctor/dashboard/${userId}`);
-        if (!res.ok) throw new Error('Failed');
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Dashboard load failed:', res.status, errorText);
+          throw new Error('Failed to load dashboard');
+        }
         dashData = await res.json();
         renderAll();
       } catch (e) {
         console.error('Dashboard load error:', e);
-        showToast('Failed to load dashboard', 'error');
+        showToast('Failed to load dashboard data', 'error');
       }
     }
 
     function renderAll() {
+      if (!dashData) {
+        console.error('No dashboard data to render');
+        return;
+      }
+      
       const { doctor, stats, appointments, posts } = dashData;
 
       // Header
@@ -330,21 +344,22 @@
       container.innerHTML = appts.map(a => {
         const patient = a.users || {};
         const dateStr = a.appointment_date ? new Date(a.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD';
+        const timeStr = a.appointment_date ? new Date(a.appointment_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
         return `
           <div class="appt-card">
             <div class="appt-info">
               <div class="appt-avatar">${(patient.name||'?').charAt(0).toUpperCase()}</div>
               <div>
-                <div class="appt-name">${esc(patient.name || 'Unknown')}</div>
-                <div class="appt-date">📅 ${dateStr}</div>
+                <div class="appt-name">${esc(patient.name || 'Unknown Patient')}</div>
+                <div class="appt-date">📅 ${dateStr} ${timeStr ? 'at ' + timeStr : ''}</div>
                 ${a.notes ? `<div class="appt-notes">📝 ${esc(a.notes)}</div>` : ''}
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="status-badge status-${a.status}">${a.status}</span>
               ${a.status === 'pending' ? `
-                <button class="btn btn-sm btn-success" onclick="updateAppt(${a.appointment_id},'confirmed')">Accept</button>
-                <button class="btn btn-sm btn-danger" onclick="updateAppt(${a.appointment_id},'cancelled')">Reject</button>
+                <button class="btn btn-sm btn-success" onclick="updateAppt('${a.appointment_id}','confirmed')">Accept</button>
+                <button class="btn btn-sm btn-danger" onclick="updateAppt('${a.appointment_id}','cancelled')">Reject</button>
               ` : ''}
             </div>
           </div>
@@ -437,10 +452,24 @@
 
     async function updateAppt(apptId, status) {
       try {
-        await fetch(`${API}/api/doctor/appointment/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ appointmentId: apptId, status }) });
-        showToast('Appointment ' + status + '!', 'success');
+        const res = await fetch(`${API}/api/doctor/appointment/update`, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ appointmentId: apptId, status }) 
+        });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Update failed:', errorText);
+          throw new Error('Failed to update appointment');
+        }
+        
+        showToast(`Appointment ${status}!`, 'success');
         await loadDashboard();
-      } catch (e) { showToast('Action failed', 'error'); }
+      } catch (e) { 
+        console.error('Update appointment error:', e);
+        showToast('Failed to update appointment', 'error'); 
+      }
     }
 
     async function createPost(e) {
