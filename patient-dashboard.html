@@ -431,6 +431,7 @@
       try {
         const res = await fetch(`${API}/getDoctors`);
         const docs = await res.json();
+        console.log('📊 API returned', docs.length, 'doctors:', docs);
         const container = document.getElementById('doctorList');
         if (!docs || docs.length === 0) {
           container.innerHTML = '<p style="color:#888;font-size:13px;">No psychologists available yet.</p>';
@@ -447,6 +448,7 @@
             <button onclick="openAppointmentModal('${d.doctor_id}', '${esc(d.name)}')" style="padding: 8px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap;">Book</button>
           </div>
         `).join('');
+        console.log('✅ Rendered', docs.length, 'doctor cards to DOM');
       } catch (e) { console.error('loadDoctors:', e); }
     }
 
