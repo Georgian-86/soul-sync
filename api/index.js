@@ -48,6 +48,14 @@ app.post("/api/login", async (req, res) => {
   const { email, password, role } = req.body;
   console.log('🔐 Login attempt:', { email, role, hasPassword: !!password });
   
+  if (!supabase) {
+    console.error('💥 Supabase not initialized - missing environment variables');
+    return res.status(500).json({ 
+      message: "Server configuration error. Environment variables not set.",
+      hint: "Admin: Check Vercel environment variables for SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+    });
+  }
+  
   if (!email || !password || !role) {
     return res.status(400).json({ message: "Email, password, and role are required." });
   }
@@ -648,9 +656,34 @@ app.get("/getSettings/:id", async (req, res) => {
   }
 });
 
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  const envCheck = {
+    supabaseUrl: !!process.env.SUPABASE_URL,
+    supabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    geminiKey: !!process.env.GEMINI_API_KEY,
+    nodeEnv: process.env.NODE_ENV || 'development'
+  };
+  
+  const healthy = envCheck.supabaseUrl && envCheck.supabaseKey;
+  
+  res.status(healthy ? 200 : 500).json({
+    status: healthy ? 'healthy' : 'unhealthy',
+    message: healthy ? 'All systems operational' : 'Missing environment variables',
+    environment: envCheck,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Test endpoint
 app.get("/test/db", async (req, res) => {
   try {
+    if (!supabase) {
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Supabase not initialized. Check environment variables at /api/health' 
+      });
+    }
     const { data: admins } = await supabase.from("admins").select("admin_id, email, name");
     const { data: users } = await supabase.from("users").select("user_id, email, name");
     const { data: doctors } = await supabase.from("doctors").select("doctor_id, email, name");
