@@ -474,22 +474,41 @@
 
     async function createPost(e) {
       e.preventDefault();
+      const title = document.getElementById('postTitle').value;
+      const content = document.getElementById('postContent').value;
+      const category = document.getElementById('postCategory').value;
+      
       const body = {
-        doctorId: parseInt(userId),
-        title: document.getElementById('postTitle').value,
-        content: document.getElementById('postContent').value,
-        category: document.getElementById('postCategory').value
+        doctorId: userId,
+        title,
+        content,
+        category
       };
+      
+      console.log('Publishing post:', body);
+      
       try {
-        const res = await fetch(`${API}/api/doctor/post/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const res = await fetch(`${API}/api/doctor/post/create`, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify(body) 
+        });
+        
+        const data = await res.json();
+        
         if (res.ok) {
-          showToast('Post published!', 'success');
+          showToast('Post published successfully!', 'success');
           document.getElementById('postForm').reset();
+          updatePublishBtn();
           await loadDashboard();
         } else {
-          showToast('Failed to publish', 'error');
+          console.error('Post creation failed:', data);
+          showToast(data.message || 'Failed to publish post', 'error');
         }
-      } catch (e) { showToast('Action failed', 'error'); }
+      } catch (e) { 
+        console.error('Post creation error:', e);
+        showToast('Network error - please try again', 'error'); 
+      }
     }
 
     function esc(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }

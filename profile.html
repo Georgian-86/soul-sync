@@ -188,11 +188,10 @@
     </div>
 
     <script>
-        const API = '';
+        const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
         let isEditMode = false;
         let currentUser = null;
         let profilePicture = null;
-        const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
 
         // Auth & Sidebar
         const userId = localStorage.getItem('currentUserId');

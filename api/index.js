@@ -478,15 +478,32 @@ app.post("/api/doctor/appointment/update", async (req, res) => {
 
 app.post("/api/doctor/post/create", async (req, res) => {
   const { doctorId, title, content, category } = req.body;
+  console.log('📝 Creating post:', { doctorId, title, category });
+  
+  if (!supabase) {
+    return res.status(500).json({ message: "Database not initialized" });
+  }
+  
+  if (!doctorId || !title || !content) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+  
   try {
     const { data, error } = await supabase
       .from("doctor_posts")
-      .insert([{ doctor_id: doctorId, title, content, category, is_published: true }])
+      .insert([{ doctor_id: doctorId, title, content, category: category || 'general', is_published: true }])
       .select().single();
-    if (error) return res.status(500).json({ message: "Database error" });
+    
+    if (error) {
+      console.error('❌ Post creation error:', error);
+      return res.status(500).json({ message: "Database error", error: error.message });
+    }
+    
+    console.log('✅ Post created:', data.post_id);
     res.json({ message: "Post published!", postId: data.post_id });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error('💥 Post creation exception:', err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 

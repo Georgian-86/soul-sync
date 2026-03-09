@@ -122,6 +122,38 @@
     .doc-spec { font-size: 12px; color: #888; }
     .doc-rating { font-size: 12px; color: #f59e0b; }
 
+    /* Doctor Posts */
+    .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 16px; }
+    .post-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px; padding: 20px; color: white;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+      transition: all 0.3s;
+    }
+    .post-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3); }
+    .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .post-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    .post-author-info { flex: 1; }
+    .post-author { font-size: 14px; font-weight: 600; color: white; margin-bottom: 2px; }
+    .post-specialty { font-size: 11px; color: rgba(255, 255, 255, 0.8); }
+    .post-date { font-size: 10px; color: rgba(255, 255, 255, 0.7); }
+    .post-category {
+      display: inline-block; padding: 4px 12px; background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px; font-size: 10px; font-weight: 600;
+      color: white; margin-bottom: 12px; backdrop-filter: blur(10px);
+    }
+    .post-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; color: white; }
+    .post-content {
+      font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.95);
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -168,6 +200,7 @@
     <div class="sidebar-logo"><span>🧠</span><span>Soul-Sync</span></div>
     <ul class="nav-links">
       <li><a href="patient-dashboard.html" class="active"><span class="nav-icon">📊</span><span>Dashboard</span></a></li>
+      <li><a href="#posts" onclick="scrollToPosts(event)"><span class="nav-icon">📰</span><span>Posts</span></a></li>
       <li><a href="journal.html"><span class="nav-icon">📓</span><span>Journal</span></a></li>
       <li><a href="art.html"><span class="nav-icon">🎨</span><span>Art Therapy</span></a></li>
       <li><a href="music.html"><span class="nav-icon">🎵</span><span>Music</span></a></li>
@@ -275,6 +308,17 @@
       </div>
     </div>
 
+    <!-- Doctor Posts Section -->
+    <div class="card" id="posts" style="margin-top: 24px;">
+      <div class="card-header">
+        <h3>📰 Doctor's Insights & Tips</h3>
+        <span class="badge">Latest Posts</span>
+      </div>
+      <div id="doctorPostsList">
+        <p style="color:#888; font-size:13px; text-align: center; padding: 20px;">Loading posts...</p>
+      </div>
+    </div>
+
     <!-- Appointment Booking Modal -->
     <div id="appointmentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
       <div style="background: white; border-radius: 16px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
@@ -298,6 +342,54 @@
             <button type="submit" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">Book Appointment</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Mood Check-in Modal -->
+    <div id="moodModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;">
+      <div style="background: white; border-radius: 20px; padding: 40px; max-width: 550px; width: 90%; box-shadow: 0 20px 80px rgba(0,0,0,0.3); text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 16px;">🌟</div>
+        <h2 style="margin-bottom: 12px; color: #1a1a2e; font-size: 24px;">How are you feeling right now?</h2>
+        <p style="color: #666; margin-bottom: 28px; font-size: 14px;">Your daily mood check-in helps us understand you better</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+          <button onclick="selectMoodPopup('joyful')" class="mood-popup-btn" data-mood="joyful" style="padding: 16px; border: 2px solid #e8e8ee; border-radius: 16px; background: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">
+            <div style="font-size: 32px; margin-bottom: 6px;">🥳</div>
+            <div style="font-size: 12px; font-weight: 600; color: #333;">Joyful</div>
+          </button>
+          <button onclick="selectMoodPopup('happy')" class="mood-popup-btn" data-mood="happy" style="padding: 16px; border: 2px solid #e8e8ee; border-radius: 16px; background: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">
+            <div style="font-size: 32px; margin-bottom: 6px;">😊</div>
+            <div style="font-size: 12px; font-weight: 600; color: #333;">Happy</div>
+          </button>
+          <button onclick="selectMoodPopup('calm')" class="mood-popup-btn" data-mood="calm" style="padding: 16px; border: 2px solid #e8e8ee; border-radius: 16px; background: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">
+            <div style="font-size: 32px; margin-bottom: 6px;">🧘</div>
+            <div style="font-size: 12px; font-weight: 600; color: #333;">Calm</div>
+          </button>
+          <button onclick="selectMoodPopup('neutral')" class="mood-popup-btn" data-mood="neutral" style="padding: 16px; border: 2px solid #e8e8ee; border-radius: 16px; background: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">
+            <div style="font-size: 32px; margin-bottom: 6px;">😐</div>
+            <div style="font-size: 12px; font-weight: 600; color: #333;">Neutral</div>
+          </button>
+          <button onclick="selectMoodPopup('stressed')" class="mood-popup-btn" data-mood="stressed" style="padding: 16px; border: 2px solid #e8e8ee; border-radius: 16px; background: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">
+            <div style="font-size: 32px; margin-bottom: 6px;">😵</div>
+            <div style="font-size: 12px; font-weight: 600; color: #333;">Stressed</div>
+          </button>
+          <button onclick="selectMoodPopup('sad')" class="mood-popup-btn" data-mood="sad" style="padding: 16px; border: 2px solid #e8e8ee; border-radius: 16px; background: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">
+            <div style="font-size: 32px; margin-bottom: 6px;">😢</div>
+            <div style="font-size: 12px; font-weight: 600; color: #333;">Sad</div>
+          </button>
+          <button onclick="selectMoodPopup('angry')" class="mood-popup-btn" data-mood="angry" style="padding: 16px; border: 2px solid #e8e8ee; border-radius: 16px; background: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">
+            <div style="font-size: 32px; margin-bottom: 6px;">😠</div>
+            <div style="font-size: 12px; font-weight: 600; color: #333;">Angry</div>
+          </button>
+          <button onclick="selectMoodPopup('tired')" class="mood-popup-btn" data-mood="tired" style="padding: 16px; border: 2px solid #e8e8ee; border-radius: 16px; background: white; cursor: pointer; transition: all 0.3s; font-family: inherit;">
+            <div style="font-size: 32px; margin-bottom: 6px;">😴</div>
+            <div style="font-size: 12px; font-weight: 600; color: #333;">Tired</div>
+          </button>
+        </div>
+        
+        <button onclick="closeMoodModal()" style="width: 100%; padding: 14px; background: #f0f2f5; color: #666; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;">
+          Skip for now
+        </button>
       </div>
     </div>
   </div>
@@ -351,8 +443,90 @@
       await loadJournalCount();
       await loadDoctors();
       await loadAppointments();
+      await loadDoctorPosts();
       renderCalendar();
+      
+      // Check if mood was logged today, if not show popup
+      checkAndShowMoodPopup();
     });
+    
+    function checkAndShowMoodPopup() {
+      const today = new Date().toISOString().split('T')[0];
+      const lastMoodCheck = localStorage.getItem('lastMoodCheck');
+      
+      // Show mood popup if not checked today
+      if (lastMoodCheck !== today) {
+        setTimeout(() => {
+          document.getElementById('moodModal').style.display = 'flex';
+        }, 1000); // Show after 1 second
+      }
+    }
+    
+    let selectedPopupMood = null;
+    
+    function selectMoodPopup(mood) {
+      selectedPopupMood = mood;
+      
+      // Visual feedback
+      document.querySelectorAll('.mood-popup-btn').forEach(btn => {
+        btn.style.borderColor = '#e8e8ee';
+        btn.style.background = 'white';
+        btn.style.transform = 'scale(1)';
+      });
+      
+      const selectedBtn = document.querySelector(`[data-mood="${mood}"]`);
+      selectedBtn.style.borderColor = '#667eea';
+      selectedBtn.style.background = '#f0f0ff';
+      selectedBtn.style.transform = 'scale(1.05)';
+      
+      // Auto-save after 500ms
+      setTimeout(async () => {
+        await saveMoodFromPopup();
+      }, 500);
+    }
+    
+    async function saveMoodFromPopup() {
+      if (!selectedPopupMood) return;
+      
+      const now = new Date();
+      const logDate = now.toISOString().split('T')[0];
+      const logHour = now.getHours();
+      
+      try {
+        const res = await fetch(`${API}/addMood`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            logDate,
+            logHour,
+            mood: selectedPopupMood
+          })
+        });
+        
+        if (res.ok) {
+          // Mark as checked today
+          localStorage.setItem('lastMoodCheck', logDate);
+          
+          // Close modal with success animation
+          setTimeout(() => {
+            closeMoodModal();
+            // Reload moods to show the update
+            loadTodayMoods();
+            loadMoodHistory();
+          }, 800);
+        }
+      } catch (e) {
+        console.error('Error saving mood:', e);
+      }
+    }
+    
+    function closeMoodModal() {
+      document.getElementById('moodModal').style.display = 'none';
+      // Mark as dismissed for today
+      const today = new Date().toISOString().split('T')[0];
+      localStorage.setItem('lastMoodCheck', today);
+    }
 
     async function loadUserInfo() {
       try {
@@ -482,6 +656,53 @@
         console.error('loadAppointments:', e);
         document.getElementById('appointmentsList').innerHTML = '<p style="color:#888;font-size:13px;">Failed to load appointments.</p>';
       }
+    }
+
+    async function loadDoctorPosts() {
+      try {
+        const res = await fetch(`${API}/getDoctorPosts`);
+        const posts = await res.json();
+        console.log('📰 API returned', posts.length, 'doctor posts:', posts);
+        const container = document.getElementById('doctorPostsList');
+        
+        if (!posts || posts.length === 0) {
+          container.innerHTML = '<p style="color:#888;font-size:13px;text-align:center;padding:20px;">No posts available yet.</p>';
+          return;
+        }
+        
+        container.innerHTML = `<div class="posts-grid">${posts.map(p => {
+          const doctor = p.doctors || {};
+          const date = new Date(p.created_at);
+          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const initials = (doctor.name || 'D').split(' ').map(n => n[0]).join('').toUpperCase();
+          
+          return `
+            <div class="post-card">
+              <div class="post-header">
+                <div class="post-avatar">${initials}</div>
+                <div class="post-author-info">
+                  <div class="post-author">${esc(doctor.name || 'Doctor')}</div>
+                  <div class="post-specialty">${esc(doctor.specialty || 'General')}</div>
+                </div>
+                <div class="post-date">${dateStr}</div>
+              </div>
+              ${p.category ? `<span class="post-category">${esc(p.category)}</span>` : ''}
+              <h4 class="post-title">${esc(p.title)}</h4>
+              <p class="post-content">${esc(p.content)}</p>
+            </div>
+          `;
+        }).join('')}</div>`;
+        
+        console.log('✅ Rendered', posts.length, 'doctor posts to DOM');
+      } catch (e) { 
+        console.error('loadDoctorPosts:', e);
+        document.getElementById('doctorPostsList').innerHTML = '<p style="color:#888;font-size:13px;text-align:center;padding:20px;">Failed to load posts.</p>';
+      }
+    }
+
+    function scrollToPosts(e) {
+      e.preventDefault();
+      document.getElementById('posts').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function openAppointmentModal(doctorId, doctorName) {
